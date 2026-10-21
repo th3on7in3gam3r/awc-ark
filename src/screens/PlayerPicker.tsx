@@ -44,8 +44,8 @@ export function PlayerPicker({
     }
   };
 
-  // Parents see a switch for each child (and themself); a child on their own login sees just theirs.
-  const showPrivacy = players.some((p) => p.isChild);
+  // Everyone can hide their own name; parents also get a switch for each child.
+  const showPrivacy = players.length > 0;
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
     window.addEventListener('keydown', onKey);
@@ -140,7 +140,7 @@ export function PlayerPicker({
               <p className="m-0 text-xs text-ark-gold" role="alert">{privacyError}</p>
             ) : (
               <p className="m-0 text-xs leading-relaxed text-ark-muted">
-                Turn on to hide a name. Your family still sees real names; everyone else sees a first initial, and no photo.
+                Turn on to hide a name. Your family still sees real names; everyone else sees a first initial and no photo.
               </p>
             )}
           </section>
