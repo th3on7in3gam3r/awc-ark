@@ -89,7 +89,7 @@ export default function App() {
       )}
       {route.name === 'board' && <Leaderboard game={route.game} />}
       {pickerOpen && (
-        <PlayerPicker players={me.players} currentId={player?.id || null} bucksEnabled={me.settings.bucksEnabled} onPick={choosePlayer} onClose={() => setPickerOpen(false)} />
+        <PlayerPicker players={me.players} currentId={player?.id || null} bucksEnabled={me.settings.bucksEnabled} onPick={choosePlayer} onClose={() => setPickerOpen(false)} onPrivacyChanged={refresh} />
       )}
     </>
   );

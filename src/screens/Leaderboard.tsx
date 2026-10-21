@@ -89,6 +89,7 @@ export function Leaderboard({ game }: { game: GameKey }) {
               <li key={e.playerId} className="flex flex-col items-center gap-2">
                 <Avatar name={e.name} initials={e.initials} url={e.avatarUrl} size={places[i] === 1 ? 64 : 52} highlight={e.mine || places[i] === 1} />
                 <span className="text-[13px] font-bold text-center leading-tight">{e.name}</span>
+                {e.hidden ? <span className="text-[10px] text-ark-muted text-center leading-tight -mt-1">Others see “Player {e.initials[0]}.”</span> : null}
                 <span
                   className={`w-full ${heights[i]} rounded-t-xl flex flex-col items-center justify-center gap-1 ${
                     places[i] === 1 ? 'bg-ark-raised border-[1.5px] border-b-0 border-ark-gold' : 'bg-ark-panel'
@@ -111,7 +112,10 @@ export function Leaderboard({ game }: { game: GameKey }) {
             <li key={e.playerId} className={`flex items-center gap-3 px-4 py-3.5 border-t border-ark-raised first:border-t-0 ${e.mine ? 'bg-ark-raised' : ''}`}>
               <span className="w-7 font-arcade text-[11px] text-ark-muted">{e.rank}</span>
               <Avatar name={e.name} initials={e.initials} url={e.avatarUrl} size={36} highlight={e.mine} />
-              <span className="flex-1 font-bold truncate">{e.name}</span>
+              <span className="flex-1 min-w-0">
+                <span className="block font-bold truncate">{e.name}</span>
+                {e.hidden ? <span className="block text-[11px] text-ark-muted">Others see “Player {e.initials[0]}.”</span> : null}
+              </span>
               <span className="font-extrabold tabular-nums">{formatScore(e.score)}</span>
             </li>
           ))}
@@ -127,7 +131,7 @@ export function Leaderboard({ game }: { game: GameKey }) {
 
       <p className="m-0 rounded-[14px] bg-ark-panel px-4 py-3.5 flex gap-2.5 items-start text-[13px] leading-relaxed text-ark-muted">
         <Clock className="w-[18px] h-[18px] shrink-0 mt-0.5 text-ark-teal" aria-hidden="true" />
-        The weekly board starts fresh every Monday. The top 3 kids in each game earn AWC Bucks. Names come from AWC Connect.
+        The weekly board starts fresh every Monday. The top 3 kids in each game earn AWC Bucks. Names come from AWC Connect. Parents can hide a child’s name in “Who’s playing?”.
       </p>
     </main>
   );

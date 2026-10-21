@@ -17,6 +17,8 @@ export type ArkPlayer = {
   avatarUrl: string | null;
   isChild: boolean;
   self: boolean;
+  /** Shown as "Player K." on the boards to everyone outside the family. */
+  hideName: boolean;
   bests: Partial<Record<GameKey, number>>;
   /** AWC Bucks earned from playing this week (kids only; null for adults). */
   bucksThisWeek: number | null;
@@ -36,6 +38,8 @@ export type BoardEntry = {
   avatarUrl: string | null;
   score: number;
   mine: boolean;
+  /** Your own player whose name others see as "Player K.". */
+  hidden?: boolean;
 };
 
 export type ArkBoard = {
@@ -96,4 +100,6 @@ export const arkApi = {
   board: (game: GameKey, period: 'week' | 'all') => request<ArkBoard>('GET', { action: 'board', game, period }),
   submit: (input: { playerId: string; game: GameKey; score: number; durationSec: number; stats?: Record<string, number> }) =>
     request<ScoreResult>('POST', { action: 'score' }, input),
+  setHideName: (playerId: string, hideName: boolean) =>
+    request<{ playerId: string; hideName: boolean }>('POST', { action: 'privacy' }, { playerId, hideName }),
 };
