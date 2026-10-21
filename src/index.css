@@ -1,21 +1,28 @@
 @import "tailwindcss";
 
 @theme {
-  --color-ark-night: #170610;
-  --color-ark-panel: #2A0B16;
-  --color-ark-line: #4A1A2A;
-  --color-ark-raised: #3A1020;
+  --color-ark-night: #4E0E22;
+  --color-ark-panel: #6A1A35;
+  --color-ark-line: #93405C;
+  --color-ark-raised: #7E2645;
   --color-ark-gold: #F2D98A;
   --color-ark-teal: #7DE3D0;
   --color-ark-cream: #F4EFE7;
-  --color-ark-muted: #C9B8AE;
+  --color-ark-muted: #EEDDD3;
   --color-ark-wine: #3A0B14;
   --font-arcade: 'Press Start 2P', monospace;
   --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
 }
 
 @layer base {
-  html, body { background: #170610; }
+  html { background: #4E0E22; }
+  /* AWC burgundy, brighter at the top like Connect's Home. */
+  body {
+    min-height: 100dvh;
+    background:
+      radial-gradient(120% 60% at 85% 0%, rgba(242, 217, 138, 0.16) 0%, rgba(242, 217, 138, 0) 60%),
+      linear-gradient(180deg, #86203F 0%, #64142D 40%, #4E0E22 100%) fixed;
+  }
   body {
     margin: 0;
     color: #F4EFE7;
