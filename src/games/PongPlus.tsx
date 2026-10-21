@@ -913,7 +913,7 @@ export const PongPlus: React.FC<PongPlusProps> = ({
   return (
     <div className="flex flex-col gap-4 w-full">
       {/* Top Game Control Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-900/90 border border-slate-800 p-3 rounded-xl backdrop-blur-md">
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-900 border border-slate-800 p-3 rounded-xl backdrop-blur-md">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
             <span className="font-arcade text-xs text-cyan-400">PONG PLUS</span>
@@ -1132,7 +1132,7 @@ export const PongPlus: React.FC<PongPlusProps> = ({
       </div>
 
       {/* Sub-bar Arena Options & Perks HUD */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-900/60 p-3 rounded-xl border border-slate-800 text-xs">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-900 p-3 rounded-xl border border-slate-800 text-xs">
         {/* P1 Perks */}
         <div className="flex items-center gap-2">
           <div className="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-sm" />

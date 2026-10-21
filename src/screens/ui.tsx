@@ -4,9 +4,9 @@ import { ChevronLeft } from 'lucide-react';
 export function ArkMark({ size = 34 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 34 34" fill="none" aria-hidden="true">
-      <path d="M3 20h28l-4 8H7z" fill="#F2D98A" />
-      <rect x="10" y="10" width="14" height="10" fill="#7DE3D0" />
-      <rect x="14" y="5" width="6" height="5" fill="#F2D98A" />
+      <path d="M3 20h28l-4 8H7z" fill="#800020" />
+      <rect x="10" y="10" width="14" height="10" fill="#C9A24A" />
+      <rect x="14" y="5" width="6" height="5" fill="#800020" />
     </svg>
   );
 }
@@ -32,7 +32,7 @@ export function Avatar({ name, initials, url, size = 40, highlight = false }: { 
 
 export function BackLink({ href, label }: { href: string; label: string }) {
   return (
-    <a href={href} aria-label={label} className="w-11 h-11 rounded-xl bg-ark-panel flex items-center justify-center shrink-0">
+    <a href={href} aria-label={label} className="w-11 h-11 rounded-xl bg-ark-panel border border-ark-line flex items-center justify-center shrink-0">
       <ChevronLeft className="w-5 h-5 text-ark-gold" aria-hidden="true" />
     </a>
   );
@@ -43,7 +43,7 @@ export function BucksCoin({ size = 52 }: { size?: number }) {
     <span
       aria-hidden="true"
       style={{ width: size, height: size, fontSize: Math.round(size / 5) }}
-      className="rounded-full bg-ark-gold text-ark-wine font-arcade flex items-center justify-center shrink-0"
+      className="rounded-full bg-[#E9C46A] text-[#5C0017] ring-2 ring-[#C9A24A] font-arcade flex items-center justify-center shrink-0"
     >
       AWC
     </span>

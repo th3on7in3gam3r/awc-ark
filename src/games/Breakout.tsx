@@ -497,7 +497,7 @@ export const Breakout: React.FC<BreakoutProps> = ({
   return (
     <div className="flex flex-col gap-3 w-full">
       {/* Header Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-900/90 border border-slate-800 p-3 rounded-xl">
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-900 border border-slate-800 p-3 rounded-xl">
         <div className="flex items-center gap-3">
           <span className="font-arcade text-xs text-amber-400">BREAKOUT DELUXE</span>
           <div className="flex items-center gap-1">

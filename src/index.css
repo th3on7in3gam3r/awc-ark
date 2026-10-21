@@ -1,37 +1,35 @@
 @import "tailwindcss";
 
 @theme {
-  --color-ark-night: #4E0E22;
-  --color-ark-panel: #6A1A35;
-  --color-ark-line: #93405C;
-  --color-ark-raised: #7E2645;
-  --color-ark-gold: #F2D98A;
-  --color-ark-teal: #7DE3D0;
-  --color-ark-cream: #F4EFE7;
-  --color-ark-muted: #EEDDD3;
-  --color-ark-wine: #3A0B14;
+  /* AWC cream theme, matching AWC Vault, DCB and Tithe. */
+  --color-ark-night: #F7F2EA;   /* page and sheets */
+  --color-ark-panel: #FFFFFF;   /* cards */
+  --color-ark-line: #EADFD3;    /* borders, quiet fills */
+  --color-ark-raised: #F7E9E4;  /* selected / highlighted rows */
+  --color-ark-gold: #800020;    /* AWC burgundy: headings, buttons, highlights */
+  --color-ark-teal: #A67C1E;    /* AWC gold: small section labels */
+  --color-ark-cream: #2A1418;   /* main text */
+  --color-ark-muted: #6B5852;   /* secondary text */
+  --color-ark-wine: #FFFFFF;    /* text on burgundy */
+  /* Arcade colors for the dark game screens. */
+  --color-arc-gold: #F2D98A;
+  --color-arc-teal: #7DE3D0;
+  --color-arc-cream: #F4EFE7;
   --font-arcade: 'Press Start 2P', monospace;
   --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
 }
 
 @layer base {
-  html { background: #4E0E22; }
-  /* AWC burgundy, brighter at the top like Connect's Home. */
-  body {
-    min-height: 100dvh;
-    background:
-      radial-gradient(120% 60% at 85% 0%, rgba(242, 217, 138, 0.16) 0%, rgba(242, 217, 138, 0) 60%),
-      linear-gradient(180deg, #86203F 0%, #64142D 40%, #4E0E22 100%) fixed;
-  }
+  html, body { background: #F7F2EA; }
   body {
     margin: 0;
-    color: #F4EFE7;
+    color: #2A1418;
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
     -webkit-tap-highlight-color: transparent;
   }
   button { cursor: pointer; }
-  :focus-visible { outline: 2px solid #7DE3D0; outline-offset: 2px; }
+  :focus-visible { outline: 2px solid #800020; outline-offset: 2px; }
 }
 
 .font-arcade {

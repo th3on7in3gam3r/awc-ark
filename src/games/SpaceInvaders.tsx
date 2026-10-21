@@ -443,7 +443,7 @@ export const SpaceInvaders: React.FC<SpaceInvadersProps> = ({
   return (
     <div className="flex flex-col gap-3 w-full">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-900/90 border border-slate-800 p-3 rounded-xl">
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-900 border border-slate-800 p-3 rounded-xl">
         <div className="flex items-center gap-3">
           <span className="font-arcade text-xs text-emerald-400">SPACE INVADERS</span>
           <span className="text-xs px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800 font-mono">
