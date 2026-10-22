@@ -52,3 +52,21 @@ test('games fit the screen instead of scrolling', () => {
   // The old Space Invaders strip moved the cannon when you pressed FIRE.
   assert.doesNotMatch(readFileSync('src/games/SpaceInvaders.tsx', 'utf8'), /SLIDE CANNON/);
 });
+
+test('iPad: pad and buttons claim their touches, and the play screen cannot be selected', () => {
+  const pad = readFileSync('src/screens/TouchPad.tsx', 'utf8');
+  assert.equal((pad.match(/ref=\{touchRef\}/g) || []).length, 2, 'D-pad and A/B buttons');
+  assert.match(pad, /addEventListener\('touchstart', stop, opts\)/);
+  assert.match(pad, /passive: false/);
+  const css = readFileSync('src/index.css', 'utf8');
+  const fit = css.slice(css.indexOf('.ark-fit {'), css.indexOf('}', css.indexOf('.ark-fit {')));
+  assert.match(fit, /-webkit-touch-callout: none;/);
+  assert.match(fit, /-webkit-user-select: none;/);
+});
+
+test('iPad: game sound unlocks on the first tap', () => {
+  const s = readFileSync('src/services/sound.ts', 'utf8');
+  assert.match(s, /public unlock\(\)/);
+  assert.match(s, /audioSession/);
+  assert.match(readFileSync('src/main.tsx', 'utf8'), /installSoundUnlock\(\)/);
+});

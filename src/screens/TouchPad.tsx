@@ -18,6 +18,35 @@ import {
 
 type Held = { key: PadKey; delay?: number; every?: number };
 
+/**
+ * Claim every touch that starts on a control. Without this, iPhone/iPad Safari
+ * treats a held or drifting thumb as a long-press: it highlights the pad and pops
+ * up Copy / Save. React's touch handlers are passive, so this must be native.
+ * Pointer events (what the pad listens to) still arrive.
+ */
+function useClaimTouches<T extends HTMLElement>() {
+  const ref = useRef<T | null>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const stop = (e: Event) => {
+      if (e.cancelable) e.preventDefault();
+    };
+    const opts: AddEventListenerOptions = { passive: false };
+    el.addEventListener('touchstart', stop, opts);
+    el.addEventListener('touchmove', stop, opts);
+    el.addEventListener('gesturestart', stop, opts);
+    el.addEventListener('selectstart', stop);
+    return () => {
+      el.removeEventListener('touchstart', stop, opts);
+      el.removeEventListener('touchmove', stop, opts);
+      el.removeEventListener('gesturestart', stop, opts);
+      el.removeEventListener('selectstart', stop);
+    };
+  }, []);
+  return ref;
+}
+
 /** Press a key and keep repeating it while held (like holding a keyboard key). */
 function useHeldKey() {
   const held = useRef<{ key: PadKey; timers: number[] } | null>(null);
@@ -55,6 +84,7 @@ function useHeldKey() {
 
 function DPad({ layout, size }: { layout: PadLayout; size: number }) {
   const { press, release } = useHeldKey();
+  const touchRef = useClaimTouches<HTMLDivElement>();
   const [dir, setDir] = useState<PadDirection | null>(null);
   const dirRef = useRef<PadDirection | null>(null);
   const pointerRef = useRef<number | null>(null);
@@ -106,7 +136,7 @@ function DPad({ layout, size }: { layout: PadLayout; size: number }) {
       style={{ width: arm, height: arm, ...style }}
     >
       {has(d) ? (
-        <svg width={arm * 0.34} height={arm * 0.34} viewBox="0 0 24 24" fill="none" stroke={dir === d ? '#F2D98A' : '#E9DCCF'} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ transform: `rotate(${{ up: 0, right: 90, down: 180, left: 270 }[d]}deg)` }}>
+        <svg pointerEvents="none" width={arm * 0.34} height={arm * 0.34} viewBox="0 0 24 24" fill="none" stroke={dir === d ? '#F2D98A' : '#E9DCCF'} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ transform: `rotate(${{ up: 0, right: 90, down: 180, left: 270 }[d]}deg)` }}>
           <path d="M6 15l6-6 6 6" />
         </svg>
       ) : null}
@@ -117,6 +147,7 @@ function DPad({ layout, size }: { layout: PadLayout; size: number }) {
 
   return (
     <div
+      ref={touchRef}
       role="group"
       aria-label={label}
       className="relative shrink-0 touch-none select-none"
@@ -153,6 +184,7 @@ function DPad({ layout, size }: { layout: PadLayout; size: number }) {
 
 function ActionButton({ button, size }: { button: PadButton; size: number }) {
   const { press, release } = useHeldKey();
+  const touchRef = useClaimTouches<HTMLButtonElement>();
   const [down, setDown] = useState(false);
   const pointerRef = useRef<number | null>(null);
   const primary = button.id === 'a';
@@ -176,6 +208,7 @@ function ActionButton({ button, size }: { button: PadButton; size: number }) {
   return (
     <div className="flex flex-col items-center gap-1.5 shrink-0">
       <button
+        ref={touchRef}
         type="button"
         aria-label={button.hint}
         className={`touch-none select-none rounded-full font-arcade flex items-center justify-center transition-[transform,filter] duration-75 shadow-[0_5px_0_rgba(42,20,24,0.35),0_10px_18px_-10px_rgba(42,20,24,0.6)] ${

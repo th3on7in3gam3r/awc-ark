@@ -36,6 +36,21 @@
 .ark-fit {
   height: 100vh;
   height: 100dvh;
+  /* A thumb drifting off the pad must never select text or open Copy / Save. */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  /* No double-tap zoom while tapping buttons fast. */
+  touch-action: manipulation;
+}
+.ark-fit * {
+  -webkit-touch-callout: none;
+}
+.ark-fit input,
+.ark-fit select,
+.ark-fit textarea {
+  -webkit-user-select: auto;
+  user-select: auto;
 }
 
 /* Phone sideways: one slim bar above the game so the play area gets the height. */

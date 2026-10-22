@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
 import { CONNECT_URL } from './lib/supabase';
+import { installSoundUnlock } from './services/sound';
 import './index.css';
 
 /**
@@ -24,6 +25,7 @@ function shouldForwardToConnect(): boolean {
 if (shouldForwardToConnect()) {
   window.location.replace(`${CONNECT_URL}/ark/${window.location.hash || ''}`);
 } else {
+  installSoundUnlock();
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
       <App />

@@ -17,13 +17,49 @@ class SoundService {
     if (!this.ctx && typeof window !== 'undefined') {
       const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       if (AudioCtx) {
-        this.ctx = new AudioCtx();
+        try {
+          this.ctx = new AudioCtx();
+        } catch {
+          this.ctx = null;
+        }
       }
     }
-    if (this.ctx && this.ctx.state === 'suspended') {
-      this.ctx.resume();
+    // iPhone/iPad also report "interrupted" (after a call, lock screen or app switch).
+    const state = this.ctx?.state as string | undefined;
+    if (this.ctx && state !== 'running' && state !== 'closed') {
+      void this.ctx.resume().catch(() => undefined);
     }
     return this.ctx;
+  }
+
+  /**
+   * Call on every tap/press. iPhone and iPad Safari only let sound start inside a
+   * user gesture, so we create/resume the audio here and play one silent sample
+   * to fully unlock it. Cheap after the first time (it only resumes if needed).
+   */
+  public unlock() {
+    if (typeof window === 'undefined') return;
+    // Safari 17+: play like a media app, so the iPad's silent mode doesn't mute the games.
+    try {
+      const session = (navigator as Navigator & { audioSession?: { type: string } }).audioSession;
+      if (session && session.type !== 'playback') session.type = 'playback';
+    } catch {
+      /* not supported */
+    }
+    const firstTime = !this.ctx;
+    const ctx = this.initCtx();
+    if (!ctx) return;
+    if (firstTime || (ctx.state as string) !== 'running') {
+      try {
+        const buffer = ctx.createBuffer(1, 1, 22050);
+        const src = ctx.createBufferSource();
+        src.buffer = buffer;
+        src.connect(ctx.destination);
+        src.start(0);
+      } catch {
+        /* ignore */
+      }
+    }
   }
 
   public setMuted(muted: boolean) {
@@ -301,3 +337,14 @@ class SoundService {
 }
 
 export const sound = new SoundService();
+
+/** Unlock game sound on any tap, click or key press (needed for iPhone/iPad Safari). */
+export function installSoundUnlock(): () => void {
+  if (typeof window === 'undefined') return () => undefined;
+  const unlock = () => sound.unlock();
+  const opts: AddEventListenerOptions = { capture: true, passive: true };
+  const events = ['pointerdown', 'touchend', 'mousedown', 'click', 'keydown'] as const;
+  events.forEach((e) => window.addEventListener(e, unlock, opts));
+  // Coming back to the tab after the iPad slept: resume on the next touch.
+  return () => events.forEach((e) => window.removeEventListener(e, unlock, opts));
+}
