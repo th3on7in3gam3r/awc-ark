@@ -46,7 +46,7 @@ export function Home({ me, player, onPickPlayer }: { me: ArkMe; player: ArkPlaye
           <button
             type="button"
             onClick={onPickPlayer}
-            aria-label={`Playing as ${player.name}. Change player`}
+            aria-label={`Playing as ${player.name}. Change player or sign out`}
             className="flex items-center gap-2 rounded-full bg-ark-panel border border-ark-line pl-1 pr-3 h-12"
           >
             <Avatar name={player.name} initials={player.initials} url={player.avatarUrl} size={40} highlight />
@@ -54,7 +54,7 @@ export function Home({ me, player, onPickPlayer }: { me: ArkMe; player: ArkPlaye
               <span className="block text-[11px] text-ark-muted">{others ? 'Playing as' : 'Player'}</span>
               <span className="block text-[13px] font-bold max-w-[110px] truncate">{player.self ? 'You' : player.name}</span>
             </span>
-            {others ? <ChevronDown className="w-4 h-4 text-ark-gold" aria-hidden="true" /> : null}
+            <ChevronDown className="w-4 h-4 text-ark-gold" aria-hidden="true" />
           </button>
         ) : null}
       </header>

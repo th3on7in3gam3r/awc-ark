@@ -44,3 +44,11 @@ test('served under /ark so it shares the AWC Connect sign-in', () => {
   const v = JSON.parse(readFileSync('vercel.json', 'utf8'));
   assert.equal(v.outputDirectory, 'dist');
 });
+
+test('the player menu has Back to AWC Connect and a confirmed Sign out', () => {
+  const src = readFileSync('src/screens/PlayerPicker.tsx', 'utf8');
+  assert.match(src, /Back to AWC Connect/);
+  assert.match(src, /supabase\.auth\.signOut\(\)/);
+  assert.match(src, /Sign out of the Ark and AWC Connect on this device\?/);
+  assert.match(src, /sign-in\?returnTo=\$\{encodeURIComponent\('\/ark\/'\)\}/);
+});

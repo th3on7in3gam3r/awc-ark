@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Check, EyeOff, Loader2, X } from 'lucide-react';
+import { Check, EyeOff, Home, Loader2, LogOut, X } from 'lucide-react';
 import { arkApi, ArkError, type ArkPlayer } from '../lib/api';
 import { Avatar } from './ui';
+import { CONNECT_URL, supabase } from '../lib/supabase';
 
 /** "Who's playing?" — you, or one of your children (their scores and AWC Bucks go to them). */
 export function PlayerPicker({
@@ -145,7 +146,81 @@ export function PlayerPicker({
             )}
           </section>
         ) : null}
+
+        <AccountActions />
       </div>
     </div>
+  );
+}
+
+/**
+ * Leave the Ark: back to AWC Connect, or sign out.
+ * The Ark shares AWC Connect's sign-in, so signing out here signs this device out
+ * of AWC Connect too. Sign out asks once more so a child can't tap it by accident.
+ */
+function AccountActions() {
+  const [confirming, setConfirming] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  const signOut = async () => {
+    setBusy(true);
+    try {
+      await supabase.auth.signOut();
+    } catch {
+      /* still leave: the saved sign-in is cleared locally either way */
+    }
+    try {
+      localStorage.removeItem('awc.ark.player');
+    } catch {
+      /* ignore */
+    }
+    window.location.assign(`${CONNECT_URL}/sign-in?returnTo=${encodeURIComponent('/ark/')}`);
+  };
+
+  return (
+    <section className="flex flex-col gap-2.5 pt-1 border-t border-ark-line" aria-label="Account">
+      <a
+        href={`${CONNECT_URL}/`}
+        className="mt-3 h-[52px] rounded-2xl bg-ark-panel border border-ark-line font-bold text-[15px] flex items-center justify-center gap-2"
+      >
+        <Home className="w-[18px] h-[18px] text-ark-gold" aria-hidden="true" />
+        Back to AWC Connect
+      </a>
+      {confirming ? (
+        <div className="rounded-2xl bg-ark-panel border border-ark-line p-4 flex flex-col gap-3" role="alertdialog" aria-labelledby="signout-q">
+          <p id="signout-q" className="m-0 text-sm leading-relaxed">
+            Sign out of the Ark and AWC Connect on this device?
+          </p>
+          <div className="flex gap-2.5">
+            <button
+              type="button"
+              onClick={() => setConfirming(false)}
+              disabled={busy}
+              className="flex-1 h-12 rounded-xl border border-ark-line font-bold text-sm"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={() => void signOut()}
+              disabled={busy}
+              className="flex-1 h-12 rounded-xl bg-ark-gold text-ark-wine font-extrabold text-sm inline-flex items-center justify-center gap-2 disabled:opacity-70"
+            >
+              {busy ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : null}
+              Sign out
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setConfirming(true)}
+          className="h-12 rounded-2xl text-ark-gold font-bold text-[15px] inline-flex items-center justify-center gap-2"
+        >
+          <LogOut className="w-[18px] h-[18px]" aria-hidden="true" />
+          Sign out
+        </button>
+      )}
+    </section>
   );
 }
