@@ -441,11 +441,11 @@ export const SpaceInvaders: React.FC<SpaceInvadersProps> = ({
   }, [isPlaying, isPaused, player1Gamepad, onAchievementUnlocked, onScoreSaved, initAliens]);
 
   return (
-    <div className="flex flex-col gap-3 w-full">
+    <div className="flex flex-col gap-2 sm:gap-3 w-full h-full min-h-0">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-900 border border-slate-800 p-3 rounded-xl">
+      <div className="ark-game-bar shrink-0 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 bg-slate-900 border border-slate-800 px-3 py-2 sm:p-3 rounded-xl">
         <div className="flex items-center gap-3">
-          <span className="font-arcade text-xs text-emerald-400">SPACE INVADERS</span>
+          <span className="ark-game-title font-arcade text-xs text-emerald-400">SPACE INVADERS</span>
           <span className="text-xs px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800 font-mono">
             WAVE {wave}
           </span>
@@ -496,7 +496,9 @@ export const SpaceInvaders: React.FC<SpaceInvadersProps> = ({
       </div>
 
       {/* Canvas */}
-      <div className="relative w-full aspect-[16/10] max-h-[540px] bg-slate-950 rounded-2xl border-2 border-emerald-500/30 overflow-hidden shadow-2xl crt-overlay">
+      {/* Grows to the biggest 16:10 that fits the space, so nothing scrolls. */}
+      <div className="flex-1 min-h-0 flex items-center justify-center" style={{ containerType: 'size' }}>
+      <div className="relative aspect-[16/10] bg-slate-950 rounded-2xl border-2 border-emerald-500/30 overflow-hidden shadow-2xl crt-overlay" style={{ width: 'min(100cqw, 160cqh)' }}>
         <canvas
           ref={canvasRef}
           width={800}
@@ -504,24 +506,6 @@ export const SpaceInvaders: React.FC<SpaceInvadersProps> = ({
           className="w-full h-full object-contain block bg-slate-950"
         />
 
-        {/* Mobile touch zone */}
-        <div
-          className="absolute inset-x-0 bottom-0 h-28 touch-none flex items-center justify-between px-6 opacity-60"
-          onTouchMove={(e) => {
-            const rect = e.currentTarget.getBoundingClientRect();
-            const touch = e.touches[0];
-            mobileTouchX.current = ((touch.clientX - rect.left) / rect.width) * 800;
-          }}
-          onTouchEnd={() => { mobileTouchX.current = null; }}
-        >
-          <span className="font-arcade text-[10px] text-emerald-400">SLIDE CANNON</span>
-          <button
-            onClick={shootPlayerBullet}
-            className="px-4 py-2 bg-emerald-600 text-slate-950 font-arcade text-xs rounded shadow-lg pointer-events-auto"
-          >
-            FIRE
-          </button>
-        </div>
 
         {gameOver && (
           <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center z-20">
@@ -537,6 +521,7 @@ export const SpaceInvaders: React.FC<SpaceInvadersProps> = ({
             </div>
           </div>
         )}
+      </div>
       </div>
     </div>
   );

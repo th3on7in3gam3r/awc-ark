@@ -495,11 +495,11 @@ export const Breakout: React.FC<BreakoutProps> = ({
   }, [isPlaying, isPaused, level, player1Gamepad, onAchievementUnlocked, onScoreSaved, resetBall]);
 
   return (
-    <div className="flex flex-col gap-3 w-full">
+    <div className="flex flex-col gap-2 sm:gap-3 w-full h-full min-h-0">
       {/* Header Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-900 border border-slate-800 p-3 rounded-xl">
+      <div className="ark-game-bar shrink-0 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 bg-slate-900 border border-slate-800 px-3 py-2 sm:p-3 rounded-xl">
         <div className="flex items-center gap-3">
-          <span className="font-arcade text-xs text-amber-400">BREAKOUT DELUXE</span>
+          <span className="ark-game-title font-arcade text-xs text-amber-400">BREAKOUT DELUXE</span>
           <div className="flex items-center gap-1">
             {Array.from({ length: 3 }).map((_, i) => (
               <Heart
@@ -553,7 +553,9 @@ export const Breakout: React.FC<BreakoutProps> = ({
       </div>
 
       {/* Canvas */}
-      <div className="relative w-full aspect-[16/10] max-h-[540px] bg-slate-950 rounded-2xl border-2 border-amber-500/30 overflow-hidden shadow-2xl crt-overlay">
+      {/* Grows to the biggest 16:10 that fits the space, so nothing scrolls. */}
+      <div className="flex-1 min-h-0 flex items-center justify-center" style={{ containerType: 'size' }}>
+      <div className="relative aspect-[16/10] bg-slate-950 rounded-2xl border-2 border-amber-500/30 overflow-hidden shadow-2xl crt-overlay" style={{ width: 'min(100cqw, 160cqh)' }}>
         <canvas
           ref={canvasRef}
           width={800}
@@ -561,18 +563,21 @@ export const Breakout: React.FC<BreakoutProps> = ({
           className="w-full h-full object-contain block bg-slate-950"
         />
 
-        {/* Touch Slider for Mobile */}
+        {/* Drag on the board to steer the paddle too (the on-screen pad is the main control). */}
         <div
-          className="absolute inset-x-0 bottom-0 h-28 touch-none flex items-center justify-center opacity-40 hover:opacity-100"
+          className="absolute inset-x-0 bottom-0 h-28 touch-none"
+          aria-hidden="true"
+          onTouchStart={(e) => {
+            const rect = e.currentTarget.getBoundingClientRect();
+            mobileTouchX.current = ((e.touches[0].clientX - rect.left) / rect.width) * 800;
+          }}
           onTouchMove={(e) => {
             const rect = e.currentTarget.getBoundingClientRect();
-            const touch = e.touches[0];
-            mobileTouchX.current = ((touch.clientX - rect.left) / rect.width) * 800;
+            mobileTouchX.current = ((e.touches[0].clientX - rect.left) / rect.width) * 800;
           }}
           onTouchEnd={() => { mobileTouchX.current = null; }}
-        >
-          <span className="font-arcade text-[10px] text-amber-400">SLIDE FINGER HERE TO MOVE PADDLE</span>
-        </div>
+          onTouchCancel={() => { mobileTouchX.current = null; }}
+        />
 
         {gameOver && (
           <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center z-20">
@@ -604,6 +609,7 @@ export const Breakout: React.FC<BreakoutProps> = ({
             </div>
           </div>
         )}
+      </div>
       </div>
     </div>
   );

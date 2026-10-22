@@ -13,6 +13,8 @@ interface PongPlusProps {
   player2Gamepad: GamepadState | null;
   onScoreSaved?: (entry: HighScoreEntry) => void;
   onAchievementUnlocked?: (title: string, xp: number) => void;
+  /** Short screen (phone sideways): hide the options bar during a match so the arena stays big. */
+  compact?: boolean;
 }
 
 interface Ball {
@@ -67,6 +69,7 @@ export const PongPlus: React.FC<PongPlusProps> = ({
   player2Gamepad,
   onScoreSaved,
   onAchievementUnlocked,
+  compact = false,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   
@@ -911,13 +914,13 @@ export const PongPlus: React.FC<PongPlusProps> = ({
   ]);
 
   return (
-    <div className="flex flex-col gap-4 w-full">
+    <div className="flex flex-col gap-2 sm:gap-3 w-full h-full min-h-0">
       {/* Top Game Control Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-900 border border-slate-800 p-3 rounded-xl backdrop-blur-md">
+      <div className="ark-game-bar shrink-0 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 bg-slate-900 border border-slate-800 px-3 py-2 sm:p-3 rounded-xl backdrop-blur-md">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <span className="font-arcade text-xs text-cyan-400">PONG PLUS</span>
-            <span className="text-xs px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800 font-mono">
+            <span className="ark-game-title font-arcade text-xs text-cyan-400">PONG PLUS</span>
+            <span className="ark-hide-compact text-xs px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800 font-mono">
               LEVEL {level}
             </span>
           </div>
@@ -943,7 +946,7 @@ export const PongPlus: React.FC<PongPlusProps> = ({
         </div>
 
         {/* Center / Stats HUD */}
-        <div className="flex items-center gap-4 text-xs font-mono">
+        <div className="ark-hide-compact flex items-center gap-4 text-xs font-mono">
           <div className="flex items-center gap-1.5 text-slate-400">
             <span>Rally:</span>
             <span className="text-amber-400 font-bold">{rallyCount}</span>
@@ -992,7 +995,9 @@ export const PongPlus: React.FC<PongPlusProps> = ({
       </div>
 
       {/* Main Canvas Arena Container */}
-      <div className="relative w-full aspect-[16/10] max-h-[580px] bg-slate-950 rounded-2xl border-2 border-cyan-500/30 overflow-hidden shadow-2xl crt-overlay">
+      {/* Grows to the biggest 16:10 that fits the space, so nothing scrolls. */}
+      <div className="flex-1 min-h-0 flex items-center justify-center" style={{ containerType: 'size' }}>
+      <div className="relative aspect-[16/10] bg-slate-950 rounded-2xl border-2 border-cyan-500/30 overflow-hidden shadow-2xl crt-overlay" style={{ width: 'min(100cqw, 160cqh)' }}>
         <canvas
           ref={canvasRef}
           width={800}
@@ -1087,6 +1092,10 @@ export const PongPlus: React.FC<PongPlusProps> = ({
         <div className="absolute inset-y-0 left-0 w-24 sm:hidden flex flex-col justify-between p-2 pointer-events-auto select-none opacity-60 hover:opacity-100">
           <div 
             className="flex-1 bg-cyan-500/10 border-r border-cyan-500/30 rounded-r-lg flex items-center justify-center touch-none"
+            onTouchStart={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect();
+              mobileP1TouchY.current = ((e.touches[0].clientY - rect.top) / rect.height) * 500;
+            }}
             onTouchMove={(e) => {
               const rect = e.currentTarget.getBoundingClientRect();
               const touch = e.touches[0];
@@ -1110,6 +1119,10 @@ export const PongPlus: React.FC<PongPlusProps> = ({
           <div className="absolute inset-y-0 right-0 w-24 sm:hidden flex flex-col justify-between p-2 pointer-events-auto select-none opacity-60 hover:opacity-100">
             <div 
               className="flex-1 bg-fuchsia-500/10 border-l border-fuchsia-500/30 rounded-l-lg flex items-center justify-center touch-none"
+              onTouchStart={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                mobileP2TouchY.current = ((e.touches[0].clientY - rect.top) / rect.height) * 500;
+              }}
               onTouchMove={(e) => {
                 const rect = e.currentTarget.getBoundingClientRect();
                 const touch = e.touches[0];
@@ -1131,8 +1144,10 @@ export const PongPlus: React.FC<PongPlusProps> = ({
         )}
       </div>
 
-      {/* Sub-bar Arena Options & Perks HUD */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-900 p-3 rounded-xl border border-slate-800 text-xs">
+      </div>
+
+      {/* Sub-bar Arena Options & Perks HUD (on short screens, only before a match) */}
+      <div className={`ark-compact-row shrink-0 grid grid-cols-2 sm:grid-cols-4 gap-x-3 gap-y-2 bg-slate-900 px-3 py-2 sm:p-3 rounded-xl border border-slate-800 text-xs ${compact && isPlaying ? 'hidden' : ''}`}>
         {/* P1 Perks */}
         <div className="flex items-center gap-2">
           <div className="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-sm" />

@@ -32,10 +32,10 @@ test('prototype leftovers are gone', () => {
 });
 
 test('Tetris has thumb-sized controls', () => {
-  const src = readFileSync('src/games/Tetris.tsx', 'utf8');
-  assert.match(src, /aria-label="Rotate"/);
-  assert.match(src, /h-16 rounded-2xl/);
-  assert.match(src, /swipeRef/);
+  // The shared on-screen pad: up rotates, A drops, B holds. Swiping the board still works.
+  const pad = readFileSync('src/services/touchPad.ts', 'utf8');
+  assert.match(pad, /tetris: \{[\s\S]*?hint: 'Hold'[\s\S]*?hint: 'Drop'/);
+  assert.match(readFileSync('src/games/Tetris.tsx', 'utf8'), /swipeRef/);
 });
 
 test('served under /ark so it shares the AWC Connect sign-in', () => {

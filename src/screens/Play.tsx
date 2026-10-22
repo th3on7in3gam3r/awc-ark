@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useEffect, useRef, useState } from 'react';
-import { ChevronDown, Loader2, RotateCcw, Smartphone } from 'lucide-react';
+import { ChevronDown, Gamepad2, Loader2, RotateCcw } from 'lucide-react';
 // Each game downloads only when it's opened.
 const PongPlus = lazy(() => import('../games/PongPlus').then((m) => ({ default: m.PongPlus })));
 const Breakout = lazy(() => import('../games/Breakout').then((m) => ({ default: m.Breakout })));
@@ -11,6 +11,37 @@ import { arkApi, ArkError, type ArkPlayer, type ScoreResult } from '../lib/api';
 import { GAME_INFO, formatScore, gameFromPrototypeId, type GameKey } from '../lib/games';
 import { go } from '../lib/route';
 import { Avatar, BackLink, BucksCoin } from './ui';
+import { PAD_LAYOUTS, PAD_PREF_KEY, shouldShowPad } from '../services/touchPad';
+import { TouchPadBar, TouchPadButtons, TouchPadControls } from './TouchPad';
+
+function useMedia(query: string): boolean {
+  const get = () => typeof window !== 'undefined' && !!window.matchMedia?.(query).matches;
+  const [match, setMatch] = useState(get);
+  useEffect(() => {
+    const mq = window.matchMedia?.(query);
+    if (!mq) return;
+    const on = () => setMatch(mq.matches);
+    on();
+    mq.addEventListener?.('change', on);
+    return () => mq.removeEventListener?.('change', on);
+  }, [query]);
+  return match;
+}
+
+function useViewport() {
+  const read = () => ({ w: window.innerWidth, h: window.innerHeight });
+  const [vp, setVp] = useState(read);
+  useEffect(() => {
+    const on = () => setVp(read());
+    window.addEventListener('resize', on);
+    window.visualViewport?.addEventListener('resize', on);
+    return () => {
+      window.removeEventListener('resize', on);
+      window.visualViewport?.removeEventListener('resize', on);
+    };
+  }, []);
+  return vp;
+}
 
 type Finish =
   | { state: 'saving'; score: number }
@@ -85,42 +116,117 @@ export function Play({
     setRun((n) => n + 1);
   };
 
-  const canvasGame = game !== 'tetris';
+  // On-screen pad: on by default for touch screens, off for mouse + keyboard.
+  // Anyone can switch it with the button in the header, and we remember.
+  const touchScreen = useMedia('(any-pointer: coarse)');
+  const [padPref, setPadPref] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem(PAD_PREF_KEY);
+    } catch {
+      return null;
+    }
+  });
+  const padOn = shouldShowPad(padPref, touchScreen);
+  const togglePad = () => {
+    const next = padOn ? 'off' : 'on';
+    setPadPref(next);
+    try {
+      localStorage.setItem(PAD_PREF_KEY, next);
+    } catch {
+      /* private mode */
+    }
+  };
+
+  // Phone sideways (short screen): pad goes beside the game instead of under it,
+  // so the game keeps the full height.
+  const sideways = useMedia('(orientation: landscape) and (max-height: 560px)');
+  const { w: vw, h: vh } = useViewport();
+  const layout = PAD_LAYOUTS[game];
+  const padBeside = padOn && sideways;
+  const dpadSize = Math.round(padBeside ? Math.min(150, vh * 0.44) : Math.min(156, vw * 0.4, vh * 0.2));
+  const buttonSize = Math.round(dpadSize * (layout.buttons.length > 1 ? 0.44 : 0.5));
+
+  const sideWidth = Math.max(dpadSize, buttonSize * 2 + 24, 112) + 8;
+
+  const padToggle = (
+    <button
+      type="button"
+      onClick={togglePad}
+      aria-pressed={padOn}
+      aria-label={padOn ? 'Hide on-screen controls' : 'Show on-screen controls'}
+      title={padOn ? 'Hide on-screen controls' : 'Show on-screen controls'}
+      className={`shrink-0 flex items-center justify-center w-11 h-11 rounded-full border ${
+        padOn ? 'bg-ark-gold text-white border-ark-gold' : 'bg-ark-panel text-ark-gold border-ark-line'
+      }`}
+    >
+      <Gamepad2 className="w-5 h-5" aria-hidden="true" />
+    </button>
+  );
+
+  const playerButton = (
+    <button
+      type="button"
+      onClick={onPickPlayer}
+      aria-label={`Playing as ${player.name}. Change player`}
+      className="shrink-0 flex items-center gap-1.5 rounded-full bg-ark-panel border border-ark-line pl-1 pr-2.5 h-11"
+    >
+      <Avatar name={player.name} initials={player.initials} url={player.avatarUrl} size={34} highlight />
+      <ChevronDown className="w-4 h-4 text-ark-gold" aria-hidden="true" />
+    </button>
+  );
 
   return (
-    <main className="mx-auto w-full max-w-[900px] px-3 sm:px-5 pt-4 pb-8 flex flex-col gap-3">
-      <header className="flex items-center gap-3">
-        <BackLink href="#/" label="Back to the Ark" />
-        <h1 className="m-0 flex-1 font-arcade text-[13px] text-ark-gold truncate">{GAME_INFO[game].title.toUpperCase()}</h1>
-        <button
-          type="button"
-          onClick={onPickPlayer}
-          aria-label={`Playing as ${player.name}. Change player`}
-          className="flex items-center gap-1.5 rounded-full bg-ark-panel border border-ark-line pl-1 pr-2.5 h-11"
-        >
-          <Avatar name={player.name} initials={player.initials} url={player.avatarUrl} size={34} highlight />
-          <ChevronDown className="w-4 h-4 text-ark-gold" aria-hidden="true" />
-        </button>
-      </header>
+    <main
+      className={`ark-fit mx-auto w-full overflow-hidden flex flex-col ${sideways ? 'ark-compact' : ''} ${padBeside ? 'gap-1.5 pt-[max(0.375rem,env(safe-area-inset-top))] pl-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))] max-w-none' : 'gap-2 sm:gap-3 pt-3 sm:pt-4 px-3 sm:px-5 max-w-[900px]'} pb-[max(0.5rem,env(safe-area-inset-bottom))]`}
+      data-pad={padOn ? (padBeside ? 'beside' : 'below') : 'off'}
+    >
+      {padBeside ? null : (
+        <header className="shrink-0 flex items-center gap-3">
+          <BackLink href="#/" label="Back to the Ark" />
+          <h1 className="m-0 flex-1 font-arcade text-[13px] text-ark-gold truncate">{GAME_INFO[game].title.toUpperCase()}</h1>
+          {padToggle}
+          {playerButton}
+        </header>
+      )}
 
-      {canvasGame ? (
-        <p className="sm:hidden m-0 flex items-center gap-2 text-xs text-ark-muted portrait:flex landscape:hidden">
-          <Smartphone className="w-4 h-4 rotate-90 text-ark-teal" aria-hidden="true" />
-          Turn your phone sideways for a bigger screen.
-        </p>
-      ) : null}
-
-      <div className="w-full">
-        <Suspense fallback={<div className="py-16 flex justify-center"><Loader2 className="w-7 h-7 animate-spin text-ark-gold" aria-label="Loading game" /></div>}>
-        {game === 'pong' && <PongPlus key={run} player1Gamepad={player1} player2Gamepad={player2} />}
-        {game === 'breakout' && <Breakout key={run} player1Gamepad={player1} />}
-        {game === 'invaders' && <SpaceInvaders key={run} player1Gamepad={player1} />}
-        {game === 'tetris' && <Tetris key={run} player1Gamepad={player1} />}
-        </Suspense>
+      {/* Game fills whatever height is left; the pad sits under it, or beside it when sideways. */}
+      <div className="flex-1 min-h-0 flex items-stretch gap-3">
+        {padBeside ? (
+          <div className="shrink-0 flex flex-col items-center" style={{ width: sideWidth }} data-touch-pad="left">
+            <div className="w-full flex items-center gap-2">
+              <BackLink href="#/" label="Back to the Ark" />
+              <h1 className="sr-only">{GAME_INFO[game].title}</h1>
+            </div>
+            <div className="flex-1 flex items-center">
+              <TouchPadControls layout={layout} size={dpadSize} />
+            </div>
+          </div>
+        ) : null}
+        <div className="flex-1 min-w-0 min-h-0 flex flex-col">
+          <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="w-7 h-7 animate-spin text-ark-gold" aria-label="Loading game" /></div>}>
+          {game === 'pong' && <PongPlus key={run} player1Gamepad={player1} player2Gamepad={player2} compact={sideways || padOn} />}
+          {game === 'breakout' && <Breakout key={run} player1Gamepad={player1} />}
+          {game === 'invaders' && <SpaceInvaders key={run} player1Gamepad={player1} />}
+          {game === 'tetris' && <Tetris key={run} player1Gamepad={player1} />}
+          </Suspense>
+        </div>
+        {padBeside ? (
+          <div className="shrink-0 flex flex-col items-center" style={{ width: sideWidth }} data-touch-pad="right">
+            <div className="w-full flex items-center justify-end gap-2">
+              {padToggle}
+              {playerButton}
+            </div>
+            <div className="flex-1 flex items-center">
+              <TouchPadButtons layout={layout} size={buttonSize} />
+            </div>
+          </div>
+        ) : null}
       </div>
 
-      {game === 'pong' ? (
-        <p className="m-0 text-xs text-ark-muted">2-player games on one screen are just for fun and don’t go on the board.</p>
+      {padOn && !padBeside ? <TouchPadBar layout={layout} dpadSize={dpadSize} buttonSize={buttonSize} /> : null}
+
+      {game === 'pong' && !sideways ? (
+        <p className="shrink-0 m-0 text-xs text-ark-muted">2-player games on one screen are just for fun and don’t go on the board.</p>
       ) : null}
 
       {finish ? (

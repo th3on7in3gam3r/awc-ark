@@ -3,7 +3,7 @@ import confetti from 'canvas-confetti';
 import { GamepadState, HighScoreEntry, ScoreSubmissionData } from '../types';
 import { sound } from '../services/sound';
 import { storage } from '../services/storage';
-import { Play, Pause, RotateCcw, Volume2, VolumeX, ArrowDown, RotateCw, Trophy, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Play, Pause, RotateCcw, Volume2, VolumeX, Trophy } from 'lucide-react';
 
 interface TetrisProps {
   player1Gamepad: GamepadState | null;
@@ -387,11 +387,11 @@ export const Tetris: React.FC<TetrisProps> = ({
   }, [isPlaying, isPaused, level, dropOne, collide]);
 
   return (
-    <div className="flex flex-col gap-3 w-full">
+    <div className="flex flex-col gap-2 sm:gap-3 w-full h-full min-h-0">
       {/* Top Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-900 border border-slate-800 p-3 rounded-xl">
+      <div className="ark-game-bar shrink-0 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 bg-slate-900 border border-slate-800 px-3 py-2 sm:p-3 rounded-xl">
         <div className="flex items-center gap-3">
-          <span className="font-arcade text-xs text-purple-400">TETRIS : NEON MATRIX</span>
+          <span className="ark-game-title font-arcade text-xs text-purple-400">TETRIS : NEON MATRIX</span>
           <span className="text-xs px-2 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-800 font-mono">
             LVL {level}
           </span>
@@ -435,9 +435,10 @@ export const Tetris: React.FC<TetrisProps> = ({
       </div>
 
       {/* Main Board + Sidebar */}
-      <div className="flex flex-col sm:flex-row items-center justify-center gap-6 bg-slate-950 p-4 rounded-2xl border-2 border-purple-500/30 shadow-2xl crt-overlay">
+      {/* Board fills the height it's given, so nothing scrolls. */}
+      <div className="flex-1 min-h-0 flex flex-row items-stretch justify-center gap-4 sm:gap-6 bg-slate-950 p-2 sm:p-4 rounded-2xl border-2 border-purple-500/30 shadow-2xl crt-overlay">
         {/* Left Mini Panel: HOLD */}
-        <div className="hidden sm:flex flex-col items-center bg-slate-900/80 p-3 rounded-xl border border-slate-800 w-28">
+        <div className="hidden sm:flex self-center flex-col items-center bg-slate-900/80 p-3 rounded-xl border border-slate-800 w-28">
           <span className="font-arcade text-[10px] text-slate-400 mb-2">HOLD (C)</span>
           <div className="w-16 h-16 flex items-center justify-center bg-slate-950 rounded border border-slate-800">
             {holdPiece ? (
@@ -458,12 +459,12 @@ export const Tetris: React.FC<TetrisProps> = ({
         </div>
 
         {/* Matrix Canvas */}
-        <div className="relative border-4 border-slate-800 rounded bg-slate-950 shadow-inner">
+        <div className="relative self-center h-full max-h-[720px] min-h-0 border-4 border-slate-800 rounded bg-slate-950 shadow-inner">
           <canvas
             ref={canvasRef}
             width={COLS * BLOCK_SIZE}
             height={ROWS * BLOCK_SIZE}
-            className="block max-w-full h-auto"
+            className="block h-full w-auto max-w-none"
             style={{ touchAction: 'none' }}
             onPointerDown={(e) => {
               swipeRef.current = { x: e.clientX, y: e.clientY, moved: 0 };
@@ -507,7 +508,7 @@ export const Tetris: React.FC<TetrisProps> = ({
         </div>
 
         {/* Right Mini Panel: NEXT */}
-        <div className="hidden sm:flex flex-col items-center bg-slate-900/80 p-3 rounded-xl border border-slate-800 w-28">
+        <div className="hidden sm:flex self-center flex-col items-center bg-slate-900/80 p-3 rounded-xl border border-slate-800 w-28">
           <span className="font-arcade text-[10px] text-slate-400 mb-2">NEXT</span>
           <div className="w-16 h-16 flex items-center justify-center bg-slate-950 rounded border border-slate-800">
             <span className="font-arcade text-lg" style={{ color: TETROMINOES[nextPiece].color }}>
@@ -519,50 +520,6 @@ export const Tetris: React.FC<TetrisProps> = ({
           </span>
         </div>
 
-        {/* Thumb controls (phones and tablets) */}
-        <div className="grid sm:hidden grid-cols-4 gap-2.5 w-full pt-2 select-none" style={{ touchAction: 'manipulation' }}>
-          <button
-            type="button"
-            aria-label="Move left"
-            onPointerDown={(e) => { e.preventDefault(); moveHoriz(-1); }}
-            className="h-16 rounded-2xl bg-slate-800 active:bg-slate-700 flex items-center justify-center"
-          >
-            <ChevronLeft className="w-7 h-7" />
-          </button>
-          <button
-            type="button"
-            aria-label="Rotate"
-            onPointerDown={(e) => { e.preventDefault(); rotatePiece(); }}
-            className="h-16 rounded-2xl bg-[#F2D98A] text-[#3A0B14] active:brightness-95 flex items-center justify-center"
-          >
-            <RotateCw className="w-7 h-7" />
-          </button>
-          <button
-            type="button"
-            aria-label="Drop"
-            onPointerDown={(e) => { e.preventDefault(); hardDrop(); }}
-            className="h-16 rounded-2xl bg-slate-800 active:bg-slate-700 flex items-center justify-center"
-          >
-            <ArrowDown className="w-7 h-7" />
-          </button>
-          <button
-            type="button"
-            aria-label="Move right"
-            onPointerDown={(e) => { e.preventDefault(); moveHoriz(1); }}
-            className="h-16 rounded-2xl bg-slate-800 active:bg-slate-700 flex items-center justify-center"
-          >
-            <ChevronRight className="w-7 h-7" />
-          </button>
-          <button
-            type="button"
-            onPointerDown={(e) => { e.preventDefault(); holdCurrentPiece(); }}
-            disabled={!canHold || !isPlaying}
-            className="col-span-4 h-11 rounded-xl bg-slate-900 border border-slate-800 text-xs font-arcade text-slate-300 disabled:opacity-40"
-          >
-            HOLD {holdPiece ? `(${holdPiece})` : ''}
-          </button>
-          <p className="col-span-4 text-center text-[11px] text-slate-400">Tap the board to rotate · swipe to move · swipe down to drop</p>
-        </div>
       </div>
     </div>
   );

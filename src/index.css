@@ -32,6 +32,40 @@
   :focus-visible { outline: 2px solid #800020; outline-offset: 2px; }
 }
 
+/* Play screen fills the screen exactly (older iPhones fall back to vh). */
+.ark-fit {
+  height: 100vh;
+  height: 100dvh;
+}
+
+/* Phone sideways: one slim bar above the game so the play area gets the height. */
+.ark-compact .ark-game-title,
+.ark-compact .ark-hide-compact {
+  display: none;
+}
+.ark-compact .ark-game-bar {
+  flex-wrap: nowrap;
+  padding: 0.25rem 0.5rem;
+  gap: 0.5rem;
+  white-space: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.ark-compact .ark-game-bar > * {
+  flex-shrink: 0;
+}
+.ark-compact .ark-compact-row {
+  display: flex;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  overflow-x: auto;
+  padding: 0.25rem 0.5rem;
+  scrollbar-width: none;
+}
+.ark-compact .ark-compact-row > * {
+  flex-shrink: 0;
+}
+
 .font-arcade {
   font-family: 'Press Start 2P', monospace;
 }
