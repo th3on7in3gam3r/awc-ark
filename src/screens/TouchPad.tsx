@@ -330,9 +330,16 @@ export function TouchPadButtons({ layout, size }: { layout: PadLayout; size: num
 }
 
 /** Pad as one bar (phone/tablet upright): steering zone fills the left side, buttons on the right. */
+/** How tall the steering pad draws: Pong's up/down rocker is taller than it is wide. */
+export function padDrawnHeight(layout: PadLayout, size: number): number {
+  const verticalRocker = isTwoWay(layout) && layout.directions.includes('up');
+  return verticalRocker ? Math.round(size * 1.35) : size;
+}
+
 export function TouchPadBar({ layout, dpadSize, buttonSize }: { layout: PadLayout; dpadSize: number; buttonSize: number }) {
+  // The bar is as tall as the pad actually draws, so it never spills over the game or text.
   return (
-    <div className="shrink-0 flex items-stretch gap-4 px-2 sm:px-6" style={{ height: dpadSize + 8 }} data-touch-pad="bar">
+    <div className="shrink-0 flex items-stretch gap-4 px-2 sm:px-6" style={{ height: padDrawnHeight(layout, dpadSize) + 8 }} data-touch-pad="bar">
       <div className="flex-1 min-w-0">
         <TouchPadControls layout={layout} size={dpadSize} />
       </div>

@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useEffect, useRef, useState } from 'react';
-import { ChevronDown, Gamepad2, Loader2, RotateCcw } from 'lucide-react';
+import { Check, ChevronDown, Gamepad2, Loader2, RotateCcw, SlidersHorizontal, X } from 'lucide-react';
 // Each game downloads only when it's opened.
 const PongPlus = lazy(() => import('../games/PongPlus').then((m) => ({ default: m.PongPlus })));
 const Breakout = lazy(() => import('../games/Breakout').then((m) => ({ default: m.Breakout })));
@@ -13,6 +13,7 @@ import { go } from '../lib/route';
 import { Avatar, BackLink, BucksCoin } from './ui';
 import { PAD_LAYOUTS, PAD_PREF_KEY, shouldShowPad } from '../services/touchPad';
 import { TouchPadBar, TouchPadButtons, TouchPadControls } from './TouchPad';
+import { loadTier, saveTier, TIER_INFO, TIERS, type Tier } from '../lib/tiers';
 
 function useMedia(query: string): boolean {
   const get = () => typeof window !== 'undefined' && !!window.matchMedia?.(query).matches;
@@ -63,6 +64,22 @@ export function Play({
 }) {
   const { player1, player2 } = useGamepad();
   const [run, setRun] = useState(0);
+  // Skill tier, remembered per player.
+  const [tier, setTier] = useState<Tier>(() => loadTier(player.id));
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const tierRef = useRef(tier);
+  tierRef.current = tier;
+  useEffect(() => {
+    setTier(loadTier(player.id));
+  }, [player.id]);
+  const chooseTier = (next: Tier) => {
+    setSettingsOpen(false);
+    if (next === tier) return;
+    saveTier(player.id, next);
+    setTier(next);
+    setFinish(null);
+    setRun((n) => n + 1); // a new game at the new level
+  };
   const [finish, setFinish] = useState<Finish | null>(null);
   const startedAt = useRef(Date.now());
   const lastFinish = useRef(0);
@@ -88,7 +105,8 @@ export function Play({
       const score = Math.max(0, Math.floor(Number(f.score) || 0));
       const durationSec = Math.round((nowMs - startedAt.current) / 1000);
       startedAt.current = nowMs;
-      const stats: Record<string, number> = {};
+      // Tier first: the board keeps up to 8 stats. 1 Beginner, 2 Intermediate, 3 Advanced.
+      const stats: Record<string, number> = { tier: TIER_INFO[tierRef.current].code };
       if (f.levelReached != null) stats.level = Math.floor(Number(f.levelReached) || 0);
       for (const [k, v] of Object.entries(f.stats || {})) if (typeof v === 'number') stats[k] = Math.floor(v);
 
@@ -155,6 +173,19 @@ export function Play({
 
   const sideWidth = Math.max(wideRocker ? Math.round(dpadSize * 1.35) : dpadSize, buttonSize * 2 + 24, 112) + 8;
 
+  const settingsButton = (
+    <button
+      type="button"
+      onClick={() => setSettingsOpen(true)}
+      aria-label={`Level: ${TIER_INFO[tier].label}. Change level`}
+      title="Game settings"
+      className="shrink-0 flex items-center gap-1.5 h-11 rounded-full border bg-ark-panel text-ark-gold border-ark-line px-3"
+    >
+      <SlidersHorizontal className="w-5 h-5" aria-hidden="true" />
+      <span className="ark-hide-compact hidden min-[420px]:inline text-[13px] font-bold">{TIER_INFO[tier].label}</span>
+    </button>
+  );
+
   const padToggle = (
     <button
       type="button"
@@ -191,6 +222,7 @@ export function Play({
         <header className="shrink-0 flex items-center gap-3">
           <BackLink href="#/" label="Back to the Ark" />
           <h1 className="m-0 flex-1 font-arcade text-[13px] text-ark-gold truncate">{GAME_INFO[game].title.toUpperCase()}</h1>
+          {settingsButton}
           {padToggle}
           {playerButton}
         </header>
@@ -212,16 +244,17 @@ export function Play({
         ) : null}
         <div className="flex-1 min-w-0 min-h-0 flex flex-col">
           <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="w-7 h-7 animate-spin text-ark-gold" aria-label="Loading game" /></div>}>
-          {game === 'pong' && <PongPlus key={run} player1Gamepad={player1} player2Gamepad={player2} compact={sideways || padOn} />}
-          {game === 'breakout' && <Breakout key={run} player1Gamepad={player1} />}
-          {game === 'invaders' && <SpaceInvaders key={run} player1Gamepad={player1} />}
-          {game === 'tetris' && <Tetris key={run} player1Gamepad={player1} />}
+          {game === 'pong' && <PongPlus key={`${run}-${tier}`} tier={tier} player1Gamepad={player1} player2Gamepad={player2} compact={sideways || padOn} />}
+          {game === 'breakout' && <Breakout key={`${run}-${tier}`} tier={tier} player1Gamepad={player1} />}
+          {game === 'invaders' && <SpaceInvaders key={`${run}-${tier}`} tier={tier} player1Gamepad={player1} />}
+          {game === 'tetris' && <Tetris key={`${run}-${tier}`} tier={tier} player1Gamepad={player1} />}
           </Suspense>
         </div>
         {padBeside ? (
           <div className="shrink-0 flex flex-col items-center gap-4" style={{ width: sideWidth }} data-touch-pad="right">
             <div className="w-full flex items-center justify-end gap-2">
-              {padToggle}
+              {settingsButton}
+          {padToggle}
               {playerButton}
             </div>
             <div className="flex-1 flex items-center">
@@ -236,6 +269,8 @@ export function Play({
       {game === 'pong' && !sideways ? (
         <p className="shrink-0 m-0 text-xs text-ark-muted">2-player games on one screen are just for fun and don’t go on the board.</p>
       ) : null}
+
+      {settingsOpen ? <TierSheet tier={tier} onPick={chooseTier} onClose={() => setSettingsOpen(false)} /> : null}
 
       {finish ? (
         <FinishSheet
@@ -351,6 +386,70 @@ function FinishSheet({
           <button type="button" onClick={onClose} className="h-11 text-ark-muted font-semibold text-sm">
             Close
           </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TierSheet({ tier, onPick, onClose }: { tier: Tier; onPick: (t: Tier) => void; onClose: () => void }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="tier-title"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-[460px] max-h-[92dvh] overflow-y-auto rounded-t-[28px] sm:rounded-[28px] bg-ark-night border border-ark-line px-5 pt-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] flex flex-col gap-4"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="m-0 font-arcade text-[11px] text-ark-teal">SETTINGS</p>
+            <h2 id="tier-title" className="m-0 mt-2 text-xl font-extrabold">Choose your level</h2>
+            <p className="m-0 mt-1 text-sm text-ark-muted">Applies to every game. Changing it starts a new game.</p>
+          </div>
+          <button type="button" onClick={onClose} aria-label="Close" className="shrink-0 w-11 h-11 rounded-full bg-ark-panel border border-ark-line flex items-center justify-center">
+            <X className="w-5 h-5" aria-hidden="true" />
+          </button>
+        </div>
+        <div className="flex flex-col gap-2.5" role="radiogroup" aria-label="Level">
+          {TIERS.map((t, i) => {
+            const on = t === tier;
+            return (
+              <button
+                key={t}
+                type="button"
+                role="radio"
+                aria-checked={on}
+                onClick={() => onPick(t)}
+                className={`text-left rounded-2xl border-[1.5px] px-4 py-3.5 flex items-center gap-3.5 ${
+                  on ? 'border-ark-gold bg-ark-raised' : 'border-ark-line bg-ark-panel'
+                }`}
+              >
+                <span className="shrink-0 flex items-end gap-[3px] h-6" aria-hidden="true">
+                  {[0, 1, 2].map((b) => (
+                    <span key={b} className={`w-[5px] rounded-sm ${b <= i ? 'bg-ark-gold' : 'bg-ark-line'}`} style={{ height: 8 + b * 7 }} />
+                  ))}
+                </span>
+                <span className="flex-1 min-w-0">
+                  <span className="block text-[16px] font-extrabold">{TIER_INFO[t].label}</span>
+                  <span className="block text-[13px] text-ark-muted">{TIER_INFO[t].blurb}</span>
+                </span>
+                {on ? <Check className="shrink-0 w-5 h-5 text-ark-gold" aria-hidden="true" /> : null}
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>

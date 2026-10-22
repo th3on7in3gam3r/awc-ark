@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { TIER_TUNING, type Tier } from '../lib/tiers';
 import confetti from 'canvas-confetti';
 import { GamepadState, HighScoreEntry, ScoreSubmissionData } from '../types';
 import { sound } from '../services/sound';
@@ -6,6 +7,8 @@ import { storage } from '../services/storage';
 import { Play, Pause, RotateCcw, Volume2, VolumeX, Trophy } from 'lucide-react';
 
 interface TetrisProps {
+  /** Beginner / Intermediate / Advanced. */
+  tier?: Tier;
   player1Gamepad: GamepadState | null;
   onScoreSaved?: (entry: HighScoreEntry) => void;
   onAchievementUnlocked?: (title: string, xp: number) => void;
@@ -29,9 +32,11 @@ type TetrominoKey = keyof typeof TETROMINOES;
 
 export const Tetris: React.FC<TetrisProps> = ({
   player1Gamepad,
+  tier = 'intermediate',
   onScoreSaved,
   onAchievementUnlocked,
 }) => {
+  const tune = TIER_TUNING[tier];
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   /** Board gestures: tap = rotate, sideways = move, down = drop. */
   const swipeRef = useRef<{ x: number; y: number; moved: number } | null>(null);
@@ -325,7 +330,7 @@ export const Tetris: React.FC<TetrisProps> = ({
 
       if (isPlaying && !isPaused) {
         dropCounterRef.current += dt;
-        const dropInterval = Math.max(0.12, 0.8 - (level - 1) * 0.07);
+        const dropInterval = Math.max(0.12, 0.8 - (level - 1) * 0.07) * tune.dropTime;
         if (dropCounterRef.current > dropInterval) {
           dropCounterRef.current = 0;
           dropOne();

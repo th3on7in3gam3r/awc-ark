@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { TIER_TUNING, type Tier } from '../lib/tiers';
 import confetti from 'canvas-confetti';
 import { GamepadState, HighScoreEntry, ScoreSubmissionData } from '../types';
 import { sound } from '../services/sound';
@@ -6,6 +7,8 @@ import { storage } from '../services/storage';
 import { Play, Pause, RotateCcw, Volume2, VolumeX, Heart, Zap, Trophy } from 'lucide-react';
 
 interface BreakoutProps {
+  /** Beginner / Intermediate / Advanced. */
+  tier?: Tier;
   player1Gamepad: GamepadState | null;
   onScoreSaved?: (entry: HighScoreEntry) => void;
   onAchievementUnlocked?: (title: string, xp: number) => void;
@@ -32,13 +35,15 @@ interface DropItem {
 
 export const Breakout: React.FC<BreakoutProps> = ({
   player1Gamepad,
+  tier = 'intermediate',
   onScoreSaved,
   onAchievementUnlocked,
 }) => {
+  const tune = TIER_TUNING[tier];
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const [score, setScore] = useState(0);
-  const [lives, setLives] = useState(3);
+  const [lives, setLives] = useState(tune.lives);
   const [level, setLevel] = useState(1);
   const [combo, setCombo] = useState(1);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -51,7 +56,7 @@ export const Breakout: React.FC<BreakoutProps> = ({
   const keysPressed = useRef<{ [key: string]: boolean }>({});
   const mobileTouchX = useRef<number | null>(null);
 
-  const paddleRef = useRef({ x: 350, y: 460, w: 90, h: 14, speed: 8 });
+  const paddleRef = useRef({ x: 350, y: 460, w: tune.paddleWidth, h: 14, speed: 8 });
   const ballsRef = useRef<{ x: number; y: number; vx: number; vy: number; radius: number }[]>([]);
   const bricksRef = useRef<Brick[]>([]);
   const dropsRef = useRef<DropItem[]>([]);
@@ -106,8 +111,8 @@ export const Breakout: React.FC<BreakoutProps> = ({
       {
         x: width / 2,
         y: height - 60,
-        vx: (Math.random() > 0.5 ? 1 : -1) * 4.5,
-        vy: -5.5,
+        vx: (Math.random() > 0.5 ? 1 : -1) * 4.5 * tune.ballSpeed,
+        vy: -5.5 * tune.ballSpeed,
         radius: 6,
       },
     ];
@@ -122,7 +127,7 @@ export const Breakout: React.FC<BreakoutProps> = ({
     comboRef.current = 1;
     setScore(0);
     setCombo(1);
-    setLives(3);
+    setLives(tune.lives);
     setLaserAmmo(0);
     setGameOver(false);
     setVictory(false);
@@ -288,12 +293,12 @@ export const Breakout: React.FC<BreakoutProps> = ({
             if (dp.type === 'laser') setLaserAmmo(prev => prev + 6);
             else if (dp.type === 'multiball') {
               ballsRef.current.push(
-                { x: p.x + p.w / 2, y: p.y - 10, vx: -4, vy: -5, radius: 6 },
-                { x: p.x + p.w / 2, y: p.y - 10, vx: 4, vy: -5, radius: 6 }
+                { x: p.x + p.w / 2, y: p.y - 10, vx: -4 * tune.ballSpeed, vy: -5 * tune.ballSpeed, radius: 6 },
+                { x: p.x + p.w / 2, y: p.y - 10, vx: 4 * tune.ballSpeed, vy: -5 * tune.ballSpeed, radius: 6 }
               );
             } else if (dp.type === 'expand') {
-              p.w = 130;
-              setTimeout(() => { p.w = 90; }, 9000);
+              p.w = tune.paddleWidth + 40;
+              setTimeout(() => { p.w = tune.paddleWidth; }, 9000);
             } else if (dp.type === 'bomb') {
               // Destroy nearest 3 bricks
               if (bricksRef.current.length > 0) {
@@ -513,7 +518,7 @@ export const Breakout: React.FC<BreakoutProps> = ({
         <div className="flex items-center gap-3">
           <span className="ark-game-title font-arcade text-xs text-amber-400">BREAKOUT DELUXE</span>
           <div className="flex items-center gap-1">
-            {Array.from({ length: 3 }).map((_, i) => (
+            {Array.from({ length: tune.lives }).map((_, i) => (
               <Heart
                 key={i}
                 className={`w-4 h-4 ${i < lives ? 'text-red-500 fill-red-500' : 'text-slate-700'}`}

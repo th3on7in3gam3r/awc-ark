@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { TIER_TUNING, type Tier } from '../lib/tiers';
 import confetti from 'canvas-confetti';
 import { GamepadState, HighScoreEntry, ScoreSubmissionData } from '../types';
 import { sound } from '../services/sound';
@@ -6,6 +7,8 @@ import { storage } from '../services/storage';
 import { Play, Pause, RotateCcw, Volume2, VolumeX, Shield, Heart, Trophy } from 'lucide-react';
 
 interface SpaceInvadersProps {
+  /** Beginner / Intermediate / Advanced. */
+  tier?: Tier;
   player1Gamepad: GamepadState | null;
   onScoreSaved?: (entry: HighScoreEntry) => void;
   onAchievementUnlocked?: (title: string, xp: number) => void;
@@ -29,14 +32,16 @@ interface BunkerBlock {
 
 export const SpaceInvaders: React.FC<SpaceInvadersProps> = ({
   player1Gamepad,
+  tier = 'intermediate',
   onScoreSaved,
   onAchievementUnlocked,
 }) => {
+  const tune = TIER_TUNING[tier];
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const [score, setScore] = useState(0);
   const [wave, setWave] = useState(1);
-  const [lives, setLives] = useState(3);
+  const [lives, setLives] = useState(tune.lives);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [gameOver, setGameOver] = useState(false);
@@ -170,7 +175,7 @@ export const SpaceInvaders: React.FC<SpaceInvadersProps> = ({
     waveRef.current = 1;
     setScore(0);
     setWave(1);
-    setLives(3);
+    setLives(tune.lives);
     setGameOver(false);
     setIsPlaying(true);
     setIsPaused(false);
@@ -242,7 +247,7 @@ export const SpaceInvaders: React.FC<SpaceInvadersProps> = ({
         // Move Aliens
         stepTimerRef.current += 1;
         const aliveAliens = aliensRef.current.filter(a => a.alive);
-        const stepRate = Math.max(8, Math.floor(aliveAliens.length / 2));
+        const stepRate = Math.max(Math.round(8 / tune.alienSpeed), Math.floor(aliveAliens.length / 2 / tune.alienSpeed));
 
         if (stepTimerRef.current > stepRate) {
           stepTimerRef.current = 0;
@@ -276,12 +281,12 @@ export const SpaceInvaders: React.FC<SpaceInvadersProps> = ({
         }
 
         // Alien shooting
-        if (Math.random() < 0.04 && aliveAliens.length > 0) {
+        if (Math.random() < tune.alienFireChance && aliveAliens.length > 0) {
           const shooter = aliveAliens[Math.floor(Math.random() * aliveAliens.length)];
           alienBulletsRef.current.push({
             x: shooter.x + 10,
             y: shooter.y + 16,
-            vy: 4.5,
+            vy: tune.alienShotSpeed,
           });
         }
 
@@ -462,7 +467,7 @@ export const SpaceInvaders: React.FC<SpaceInvadersProps> = ({
             WAVE {wave}
           </span>
           <div className="flex items-center gap-1">
-            {Array.from({ length: 3 }).map((_, i) => (
+            {Array.from({ length: tune.lives }).map((_, i) => (
               <Heart
                 key={i}
                 className={`w-4 h-4 ${i < lives ? 'text-emerald-400 fill-emerald-400' : 'text-slate-700'}`}

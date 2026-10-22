@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { TIER_TUNING, type Tier } from '../lib/tiers';
 import confetti from 'canvas-confetti';
 import { GamepadState, GameDifficulty, HighScoreEntry, ScoreSubmissionData } from '../types';
 import { sound } from '../services/sound';
@@ -9,6 +10,8 @@ import {
 } from 'lucide-react';
 
 interface PongPlusProps {
+  /** Beginner / Intermediate / Advanced. */
+  tier?: Tier;
   player1Gamepad: GamepadState | null;
   player2Gamepad: GamepadState | null;
   onScoreSaved?: (entry: HighScoreEntry) => void;
@@ -66,16 +69,18 @@ interface ArenaObstacle {
 
 export const PongPlus: React.FC<PongPlusProps> = ({
   player1Gamepad,
+  tier = 'intermediate',
   player2Gamepad,
   onScoreSaved,
   onAchievementUnlocked,
   compact = false,
 }) => {
+  const tune = TIER_TUNING[tier];
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   
   // Game Configuration State
   const [mode, setMode] = useState<'1p' | '2p'>('1p');
-  const [difficulty, setDifficulty] = useState<GameDifficulty>('medium');
+  const [difficulty] = useState<GameDifficulty>(tune.pongAi);
   const [powerupsEnabled, setPowerupsEnabled] = useState(true);
   const [level, setLevel] = useState(1);
   const [targetScore, setTargetScore] = useState(7);
