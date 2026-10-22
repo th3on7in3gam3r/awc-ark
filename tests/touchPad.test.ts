@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import { GAMES } from '../src/lib/games';
-import { directionAt, PAD_LAYOUTS, shouldShowPad } from '../src/services/touchPad';
+import { directionAt, directionFromOffset, isTwoWay, PAD_LAYOUTS, shouldShowPad } from '../src/services/touchPad';
 
 test('pad shows on touch screens, hides on computers, and remembers a choice', () => {
   assert.equal(shouldShowPad(null, true), true);
@@ -69,4 +69,33 @@ test('iPad: game sound unlocks on the first tap', () => {
   assert.match(s, /public unlock\(\)/);
   assert.match(s, /audioSession/);
   assert.match(readFileSync('src/main.tsx', 'utf8'), /installSoundUnlock\(\)/);
+});
+
+test('left/right games: no dead spot, every touch is left or right', () => {
+  const lr = ['left', 'right'] as const;
+  assert.equal(directionAt(99, 100, 200, lr), 'left');
+  assert.equal(directionAt(101, 100, 200, lr), 'right');
+  assert.equal(directionAt(100, 100, 200, lr), 'right');
+});
+
+test('a thumb resting on the middle line keeps its direction instead of flickering', () => {
+  const lr = ['left', 'right'] as const;
+  assert.equal(directionFromOffset(4, 0, 200, lr, 'left'), 'left');
+  assert.equal(directionFromOffset(30, 0, 200, lr, 'left'), 'right');
+  assert.equal(directionFromOffset(-4, 0, 200, lr, 'right'), 'right');
+});
+
+test('left/right and up/down games use the rocker; Tetris keeps the cross', () => {
+  assert.equal(isTwoWay(PAD_LAYOUTS.breakout), true);
+  assert.equal(isTwoWay(PAD_LAYOUTS.pong), true);
+  assert.equal(isTwoWay(PAD_LAYOUTS.tetris), false);
+});
+
+test('A (Space) starts every game from its start screen, and labels say what A does', () => {
+  for (const f of ['SpaceInvaders', 'Breakout', 'PongPlus', 'Tetris']) {
+    const src = readFileSync(`src/games/${f}.tsx`, 'utf8');
+    assert.match(src, /if \(e\.code !== 'Space' \|\| e\.repeat\) return;[\s\S]*?startGame\(\);/, f);
+  }
+  assert.equal(PAD_LAYOUTS.breakout.buttons[0].hint, 'Start / Laser');
+  assert.equal(PAD_LAYOUTS.pong.buttons[0].hint, 'Start / Laser');
 });

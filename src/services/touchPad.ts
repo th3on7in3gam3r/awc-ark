@@ -45,12 +45,12 @@ export const PAD_LAYOUTS: Record<GameKey, PadLayout> = {
   pong: {
     directions: ['up', 'down'],
     keys: { up: KEY.w, down: KEY.s },
-    buttons: [{ id: 'a', label: 'A', hint: 'Laser', press: KEY.space }],
+    buttons: [{ id: 'a', label: 'A', hint: 'Start / Laser', press: KEY.space }],
   },
   breakout: {
     directions: ['left', 'right'],
     keys: { left: KEY.left, right: KEY.right },
-    buttons: [{ id: 'a', label: 'A', hint: 'Launch', press: KEY.space }],
+    buttons: [{ id: 'a', label: 'A', hint: 'Start / Laser', press: KEY.space }],
   },
   invaders: {
     directions: ['left', 'right'],
@@ -72,31 +72,52 @@ export const PAD_LAYOUTS: Record<GameKey, PadLayout> = {
 export const PAD_REPEAT_DELAY_MS = 200;
 
 /**
- * Which direction a finger at (x, y) is pressing on a D-pad of the given size.
- * The middle is a small dead zone; a finger can slide between directions.
+ * Which direction a finger is pressing, from its offset (dx, dy) to the pad's center.
+ *
+ * Left/right (or up/down) games have NO dead zone: every touch is one side or the
+ * other, so a thumb never lands on "nothing". To stop flicker when a thumb rests on
+ * the middle line, the current direction is kept until the thumb clearly crosses it.
+ * The 4-way Tetris pad keeps a small dead zone in the middle.
  */
+export function directionFromOffset(
+  dx: number,
+  dy: number,
+  size: number,
+  allowed: readonly PadDirection[],
+  current: PadDirection | null = null
+): PadDirection | null {
+  const horizontal = allowed.includes('left') || allowed.includes('right');
+  const vertical = allowed.includes('up') || allowed.includes('down');
+  const hold = size * 0.06; // how far past the middle before switching sides
+
+  if (horizontal && !vertical) {
+    if ((current === 'left' && dx < hold) || (current === 'right' && dx > -hold)) return current;
+    return dx < 0 ? 'left' : 'right';
+  }
+  if (vertical && !horizontal) {
+    if ((current === 'up' && dy < hold) || (current === 'down' && dy > -hold)) return current;
+    return dy < 0 ? 'up' : 'down';
+  }
+
+  if (Math.hypot(dx, dy) < size * 0.12) return null;
+  const dir: PadDirection = Math.abs(dx) >= Math.abs(dy) ? (dx < 0 ? 'left' : 'right') : dy < 0 ? 'up' : 'down';
+  return allowed.includes(dir) ? dir : null;
+}
+
+/** Same as directionFromOffset, from a point inside a square pad of the given size. */
 export function directionAt(
   x: number,
   y: number,
   size: number,
-  allowed: readonly PadDirection[]
+  allowed: readonly PadDirection[],
+  current: PadDirection | null = null
 ): PadDirection | null {
-  const half = size / 2;
-  const dx = x - half;
-  const dy = y - half;
-  const dead = size * 0.12;
-  if (Math.hypot(dx, dy) < dead) return null;
+  return directionFromOffset(x - size / 2, y - size / 2, size, allowed, current);
+}
 
-  const horizontal = allowed.includes('left') || allowed.includes('right');
-  const vertical = allowed.includes('up') || allowed.includes('down');
-
-  let dir: PadDirection;
-  if (horizontal && !vertical) dir = dx < 0 ? 'left' : 'right';
-  else if (vertical && !horizontal) dir = dy < 0 ? 'up' : 'down';
-  else if (Math.abs(dx) >= Math.abs(dy)) dir = dx < 0 ? 'left' : 'right';
-  else dir = dy < 0 ? 'up' : 'down';
-
-  return allowed.includes(dir) ? dir : null;
+/** Left/right-only or up/down-only games get the two-sided rocker instead of a cross. */
+export function isTwoWay(layout: PadLayout): boolean {
+  return layout.directions.length === 2;
 }
 
 /** Send a key press or release to the game, exactly like a real keyboard. */

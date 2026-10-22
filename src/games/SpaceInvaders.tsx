@@ -183,6 +183,18 @@ export const SpaceInvaders: React.FC<SpaceInvadersProps> = ({
     sound.playScore();
   }, [initAliens]);
 
+  // Space (or the on-screen A button) starts the game from the start screen.
+  useEffect(() => {
+    if (isPlaying) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.code !== 'Space' || e.repeat) return;
+      e.preventDefault();
+      startGame();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isPlaying, startGame]);
+
   // Loop
   useEffect(() => {
     const canvas = canvasRef.current;

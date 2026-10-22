@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  directionAt,
+  directionFromOffset,
+  isTwoWay,
   padHaptic,
   PAD_REPEAT_DELAY_MS,
   sendPadKey,
@@ -82,17 +83,26 @@ function useHeldKey() {
   return { press, release, current: held };
 }
 
+/**
+ * The steering control. Its touch area fills the whole space it's given (the left
+ * side of the controls), with the pad drawn in the middle, so a thumb that lands a
+ * little off still steers. Direction is measured from the center of the drawn pad.
+ */
 function DPad({ layout, size }: { layout: PadLayout; size: number }) {
   const { press, release } = useHeldKey();
   const touchRef = useClaimTouches<HTMLDivElement>();
+  const visualRef = useRef<HTMLDivElement | null>(null);
   const [dir, setDir] = useState<PadDirection | null>(null);
   const dirRef = useRef<PadDirection | null>(null);
   const pointerRef = useRef<number | null>(null);
+  const twoWay = isTwoWay(layout);
 
   const update = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
-      const rect = e.currentTarget.getBoundingClientRect();
-      const next = directionAt(e.clientX - rect.left, e.clientY - rect.top, rect.width, layout.directions);
+      const box = (visualRef.current || e.currentTarget).getBoundingClientRect();
+      const dx = e.clientX - (box.left + box.width / 2);
+      const dy = e.clientY - (box.top + box.height / 2);
+      const next = directionFromOffset(dx, dy, size, layout.directions, dirRef.current);
       if (next === dirRef.current) return;
       dirRef.current = next;
       setDir(next);
@@ -103,7 +113,7 @@ function DPad({ layout, size }: { layout: PadLayout; size: number }) {
       const key = layout.keys[next];
       if (key) press({ key, every: layout.repeatDirections?.[next] });
     },
-    [layout, press, release]
+    [layout, press, release, size]
   );
 
   const end = useCallback(() => {
@@ -124,36 +134,19 @@ function DPad({ layout, size }: { layout: PadLayout; size: number }) {
     };
   }, [end]);
 
-  const has = (d: PadDirection) => layout.directions.includes(d);
-  const arm = size / 3;
-
-  const Arm = ({ d, style }: { d: PadDirection; style: React.CSSProperties }) => (
-    <div
-      aria-hidden="true"
-      className={`absolute flex items-center justify-center rounded-[14px] transition-colors duration-75 ${
-        has(d) ? (dir === d ? 'bg-ark-gold' : 'bg-[#3A1E24]') : 'bg-[#3A1E24]/35'
-      }`}
-      style={{ width: arm, height: arm, ...style }}
-    >
-      {has(d) ? (
-        <svg pointerEvents="none" width={arm * 0.34} height={arm * 0.34} viewBox="0 0 24 24" fill="none" stroke={dir === d ? '#F2D98A' : '#E9DCCF'} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ transform: `rotate(${{ up: 0, right: 90, down: 180, left: 270 }[d]}deg)` }}>
-          <path d="M6 15l6-6 6 6" />
-        </svg>
-      ) : null}
-    </div>
-  );
-
-  const label = layout.directions.length === 4 ? 'Direction pad' : layout.directions.includes('left') ? 'Move left or right' : 'Move up or down';
+  const label = !twoWay ? 'Direction pad' : layout.directions.includes('left') ? 'Move left or right' : 'Move up or down';
 
   return (
     <div
       ref={touchRef}
       role="group"
       aria-label={label}
-      className="relative shrink-0 touch-none select-none"
-      style={{ width: size, height: size, WebkitTouchCallout: 'none' }}
+      data-dir={dir || ''}
+      className="relative w-full h-full flex items-center justify-center touch-none select-none"
+      style={{ minWidth: size, minHeight: twoWay ? size * 0.7 : size, WebkitTouchCallout: 'none' }}
       onPointerDown={(e) => {
         e.preventDefault();
+        if (pointerRef.current !== null) return; // one thumb steers at a time
         pointerRef.current = e.pointerId;
         e.currentTarget.setPointerCapture(e.pointerId);
         update(e);
@@ -165,17 +158,97 @@ function DPad({ layout, size }: { layout: PadLayout; size: number }) {
       onPointerUp={(e) => {
         if (pointerRef.current === e.pointerId) end();
       }}
-      onPointerCancel={end}
+      onPointerCancel={(e) => {
+        if (pointerRef.current === e.pointerId) end();
+      }}
       onLostPointerCapture={(e) => {
         if (pointerRef.current === e.pointerId) end();
       }}
       onContextMenu={(e) => e.preventDefault()}
     >
-      <Arm d="up" style={{ left: arm, top: 0 }} />
-      <Arm d="left" style={{ left: 0, top: arm }} />
-      <Arm d="right" style={{ left: arm * 2, top: arm }} />
-      <Arm d="down" style={{ left: arm, top: arm * 2 }} />
-      <div aria-hidden="true" className="absolute bg-[#3A1E24]" style={{ left: arm - 1, top: arm - 1, width: arm + 2, height: arm + 2 }}>
+      <div ref={visualRef} className="pointer-events-none">
+        {twoWay ? <Rocker layout={layout} size={size} dir={dir} /> : <Cross layout={layout} size={size} dir={dir} />}
+      </div>
+    </div>
+  );
+}
+
+const ARROW_TURN: Record<PadDirection, number> = { up: 0, right: 90, down: 180, left: 270 };
+
+function Arrow({ d, px, on }: { d: PadDirection; px: number; on: boolean }) {
+  return (
+    <svg
+      aria-hidden="true"
+      width={px}
+      height={px}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={on ? '#F2D98A' : '#E9DCCF'}
+      strokeWidth="3"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      style={{ transform: `rotate(${ARROW_TURN[d]}deg)` }}
+    >
+      <path d="M6 15l6-6 6 6" />
+    </svg>
+  );
+}
+
+/**
+ * Left/right (or up/down) games: one wide bar split in two. Every touch is one side
+ * or the other, and the pressed side lights up and the bar tips toward it, so you
+ * can tell which way you're going from the corner of your eye.
+ */
+function Rocker({ layout, size, dir }: { layout: PadLayout; size: number; dir: PadDirection | null }) {
+  const vertical = layout.directions.includes('up');
+  const [first, second] = vertical ? (['up', 'down'] as const) : (['left', 'right'] as const);
+  const long = Math.round(size * 1.35);
+  const short = Math.round(size * 0.66);
+  const tilt = dir === first ? -1 : dir === second ? 1 : 0;
+  const half = (d: PadDirection) => (
+    <div
+      className={`flex-1 flex items-center justify-center transition-colors duration-75 ${dir === d ? 'bg-ark-gold' : 'bg-[#3A1E24]'}`}
+    >
+      <Arrow d={d} px={Math.round(short * 0.42)} on={dir === d} />
+    </div>
+  );
+  return (
+    <div
+      className={`flex ${vertical ? 'flex-col' : 'flex-row'} overflow-hidden rounded-full shadow-[0_6px_0_rgba(42,20,24,0.28),0_12px_20px_-12px_rgba(42,20,24,0.6)] transition-transform duration-75`}
+      style={{
+        width: vertical ? short : long,
+        height: vertical ? long : short,
+        transform: vertical ? `translateY(${tilt * 3}px)` : `translateX(${tilt * 3}px)`,
+      }}
+    >
+      {half(first)}
+      <div className={vertical ? 'h-[2px] bg-[#2A1418]' : 'w-[2px] bg-[#2A1418]'} />
+      {half(second)}
+    </div>
+  );
+}
+
+/** Tetris: the classic 4-way cross. */
+function Cross({ layout, size, dir }: { layout: PadLayout; size: number; dir: PadDirection | null }) {
+  const arm = size / 3;
+  const has = (d: PadDirection) => layout.directions.includes(d);
+  const Arm = ({ d, left, top }: { d: PadDirection; left: number; top: number }) => (
+    <div
+      className={`absolute flex items-center justify-center rounded-[14px] transition-colors duration-75 ${
+        has(d) ? (dir === d ? 'bg-ark-gold' : 'bg-[#3A1E24]') : 'bg-[#3A1E24]/35'
+      }`}
+      style={{ width: arm, height: arm, left, top }}
+    >
+      {has(d) ? <Arrow d={d} px={arm * 0.34} on={dir === d} /> : null}
+    </div>
+  );
+  return (
+    <div className="relative" style={{ width: size, height: size }}>
+      <Arm d="up" left={arm} top={0} />
+      <Arm d="left" left={0} top={arm} />
+      <Arm d="right" left={arm * 2} top={arm} />
+      <Arm d="down" left={arm} top={arm * 2} />
+      <div className="absolute bg-[#3A1E24]" style={{ left: arm - 1, top: arm - 1, width: arm + 2, height: arm + 2 }}>
         <div className="absolute inset-[30%] rounded-full bg-[#2A1418]" />
       </div>
     </div>
@@ -256,12 +329,16 @@ export function TouchPadButtons({ layout, size }: { layout: PadLayout; size: num
   );
 }
 
-/** Pad as one bar: D-pad on the left, buttons on the right (phone held upright). */
+/** Pad as one bar (phone/tablet upright): steering zone fills the left side, buttons on the right. */
 export function TouchPadBar({ layout, dpadSize, buttonSize }: { layout: PadLayout; dpadSize: number; buttonSize: number }) {
   return (
-    <div className="shrink-0 flex items-center justify-between gap-4 px-2 sm:px-6" data-touch-pad="bar">
-      <TouchPadControls layout={layout} size={dpadSize} />
-      <TouchPadButtons layout={layout} size={buttonSize} />
+    <div className="shrink-0 flex items-stretch gap-4 px-2 sm:px-6" style={{ height: dpadSize + 8 }} data-touch-pad="bar">
+      <div className="flex-1 min-w-0">
+        <TouchPadControls layout={layout} size={dpadSize} />
+      </div>
+      <div className="shrink-0 flex items-center">
+        <TouchPadButtons layout={layout} size={buttonSize} />
+      </div>
     </div>
   );
 }

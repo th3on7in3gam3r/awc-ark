@@ -294,6 +294,18 @@ export const PongPlus: React.FC<PongPlusProps> = ({
     sound.playScore();
   }, [level, resetBall, setupLevelObstacles]);
 
+  // Space (or the on-screen A button) starts the game from the start screen.
+  useEffect(() => {
+    if (isPlaying) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.code !== 'Space' || e.repeat) return;
+      e.preventDefault();
+      startGame();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isPlaying, startGame]);
+
   // Key listeners
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

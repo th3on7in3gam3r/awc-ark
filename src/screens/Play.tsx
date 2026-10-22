@@ -143,10 +143,17 @@ export function Play({
   const { w: vw, h: vh } = useViewport();
   const layout = PAD_LAYOUTS[game];
   const padBeside = padOn && sideways;
-  const dpadSize = Math.round(padBeside ? Math.min(150, vh * 0.44) : Math.min(156, vw * 0.4, vh * 0.2));
-  const buttonSize = Math.round(dpadSize * (layout.buttons.length > 1 ? 0.44 : 0.5));
+  // Left/right games use a wide rocker (1.35x as wide as tall-ish), so size it to fit.
+  const wideRocker = layout.directions.length === 2 && layout.directions.includes('left');
+  const dpadSize = Math.round(
+    padBeside
+      ? Math.min(wideRocker ? 128 : 150, vh * 0.44)
+      : Math.min(156, vw * (wideRocker ? 0.32 : 0.4), vh * 0.2)
+  );
+  const padBase = Math.round(padBeside ? Math.min(150, vh * 0.44) : Math.min(156, vw * 0.4, vh * 0.2));
+  const buttonSize = Math.round(padBase * (layout.buttons.length > 1 ? 0.44 : 0.5));
 
-  const sideWidth = Math.max(dpadSize, buttonSize * 2 + 24, 112) + 8;
+  const sideWidth = Math.max(wideRocker ? Math.round(dpadSize * 1.35) : dpadSize, buttonSize * 2 + 24, 112) + 8;
 
   const padToggle = (
     <button
@@ -192,12 +199,13 @@ export function Play({
       {/* Game fills whatever height is left; the pad sits under it, or beside it when sideways. */}
       <div className="flex-1 min-h-0 flex items-stretch gap-3">
         {padBeside ? (
-          <div className="shrink-0 flex flex-col items-center" style={{ width: sideWidth }} data-touch-pad="left">
+          <div className="shrink-0 flex flex-col items-center gap-4" style={{ width: sideWidth }} data-touch-pad="left">
             <div className="w-full flex items-center gap-2">
               <BackLink href="#/" label="Back to the Ark" />
               <h1 className="sr-only">{GAME_INFO[game].title}</h1>
             </div>
-            <div className="flex-1 flex items-center">
+            {/* Gap above keeps a thumb near the top of the steering area off the Back button. */}
+            <div className="flex-1 w-full min-h-0 pt-2">
               <TouchPadControls layout={layout} size={dpadSize} />
             </div>
           </div>
@@ -211,7 +219,7 @@ export function Play({
           </Suspense>
         </div>
         {padBeside ? (
-          <div className="shrink-0 flex flex-col items-center" style={{ width: sideWidth }} data-touch-pad="right">
+          <div className="shrink-0 flex flex-col items-center gap-4" style={{ width: sideWidth }} data-touch-pad="right">
             <div className="w-full flex items-center justify-end gap-2">
               {padToggle}
               {playerButton}

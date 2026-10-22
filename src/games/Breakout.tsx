@@ -136,6 +136,18 @@ export const Breakout: React.FC<BreakoutProps> = ({
     sound.playScore();
   }, [level, initLevelBricks, resetBall]);
 
+  // Space (or the on-screen A button) starts the game from the start screen.
+  useEffect(() => {
+    if (isPlaying) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.code !== 'Space' || e.repeat) return;
+      e.preventDefault();
+      startGame();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isPlaying, startGame]);
+
   const firePaddleLaser = useCallback(() => {
     if (laserAmmo > 0 && isPlaying && !isPaused) {
       setLaserAmmo(prev => prev - 1);
