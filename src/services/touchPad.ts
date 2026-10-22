@@ -38,7 +38,6 @@ const KEY = {
   space: { key: ' ', code: 'Space' },
   w: { key: 'w', code: 'KeyW' },
   s: { key: 's', code: 'KeyS' },
-  c: { key: 'c', code: 'KeyC' },
 } satisfies Record<string, PadKey>;
 
 export const PAD_LAYOUTS: Record<GameKey, PadLayout> = {
@@ -63,7 +62,7 @@ export const PAD_LAYOUTS: Record<GameKey, PadLayout> = {
     keys: { up: KEY.up, down: KEY.down, left: KEY.left, right: KEY.right },
     repeatDirections: { left: 110, right: 110, down: 55 },
     buttons: [
-      { id: 'b', label: 'B', hint: 'Hold', press: KEY.c },
+      { id: 'b', label: 'B', hint: 'Rotate', press: KEY.up },
       { id: 'a', label: 'A', hint: 'Drop', press: KEY.space },
     ],
   },

@@ -32,9 +32,10 @@ test('prototype leftovers are gone', () => {
 });
 
 test('Tetris has thumb-sized controls', () => {
-  // The shared on-screen pad: up rotates, A drops, B holds. Swiping the board still works.
+  // The shared on-screen pad: B (and up) rotate, A drops. Swiping the board still works.
   const pad = readFileSync('src/services/touchPad.ts', 'utf8');
-  assert.match(pad, /tetris: \{[\s\S]*?hint: 'Hold'[\s\S]*?hint: 'Drop'/);
+  assert.match(pad, /tetris: \{[\s\S]*?hint: 'Rotate', press: KEY\.up[\s\S]*?hint: 'Drop'/);
+  assert.doesNotMatch(pad, /hint: 'Hold'/);
   assert.match(readFileSync('src/games/Tetris.tsx', 'utf8'), /swipeRef/);
 });
 
