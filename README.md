@@ -1,6 +1,6 @@
 # AWC Ark
 
-Retro games for the Anointed Worship Center family: **Pong Plus, Breakout, Space Invaders and Tetris**.
+Retro games for the Anointed Worship Center family: **Pong Plus, Breakout, Space Invaders, Tetris and Dove Defender**.
 Scores go on a shared leaderboard ("Ark Champions"), and kids earn **AWC Bucks** within the church's rules.
 
 Started as the Google AI Studio "Pong Plus & Retro Arcade" prototype. The four games were kept; the

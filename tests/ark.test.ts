@@ -16,12 +16,13 @@ test('every game maps from the prototype id it reports', () => {
   assert.equal(gameFromPrototypeId('space-invaders'), 'invaders');
   assert.equal(gameFromPrototypeId('tetris'), 'tetris');
   assert.equal(gameFromPrototypeId('breakout'), 'breakout');
-  assert.equal(GAMES.length, 4);
+  assert.equal(gameFromPrototypeId('dove-defender'), 'dove');
+  assert.equal(GAMES.length, 5);
   assert.equal(formatScore(16920), '16,920');
 });
 
 test('prototype leftovers are gone', () => {
-  for (const f of ['PongPlus', 'Breakout', 'SpaceInvaders', 'Tetris']) {
+  for (const f of ['PongPlus', 'Breakout', 'SpaceInvaders', 'Tetris', 'DoveDefender']) {
     const src = readFileSync(`src/games/${f}.tsx`, 'utf8');
     assert.equal(/onRequestScoreSubmission\b(?!\?)/.test(src.replace(/onRequestScoreSubmission\?:.*\n/, '')), false, `${f} submit button`);
     assert.equal(/team: '/.test(src), false, `${f} fake team`);

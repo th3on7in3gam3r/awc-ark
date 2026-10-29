@@ -1,4 +1,4 @@
-export type GameId = 'pong-plus' | 'breakout' | 'space-invaders' | 'tetris';
+export type GameId = 'pong-plus' | 'breakout' | 'space-invaders' | 'tetris' | 'dove-defender';
 
 export type GameDifficulty = 'easy' | 'medium' | 'hard' | 'overdrive';
 

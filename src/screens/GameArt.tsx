@@ -36,6 +36,20 @@ export function GameArt({ game }: { game: GameKey }) {
       </div>
     );
   }
+  if (game === 'dove') {
+    // Bugs in a curved swoop above a little white dove and the ark.
+    return (
+      <div className={box} aria-hidden="true">
+        {[[16, 10], [40, 18], [64, 12], [92, 22], [116, 14]].map(([x, y], i) => (
+          <div key={i} className="absolute w-3.5 h-2.5" style={{ left: x, top: y, background: i % 2 ? '#B07BE0' : '#6CCB5F' }} />
+        ))}
+        <div className="absolute left-[70px] top-[44px] w-1 h-3 bg-arc-cream" />
+        <div className="absolute left-[62px] bottom-[22px] w-5 h-2 bg-arc-cream" />
+        <div className="absolute left-[69px] bottom-[28px] w-1.5 h-2 bg-arc-cream" />
+        <div className="absolute left-6 right-6 bottom-2 h-3 rounded-b-lg bg-[#5B3A24]" />
+      </div>
+    );
+  }
   return (
     <div className={box} aria-hidden="true">
       <div className="absolute left-[50px] top-3 w-[30px] h-2.5 bg-[#E8A0B4]" />

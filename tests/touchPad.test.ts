@@ -44,7 +44,7 @@ test('every game has a pad layout that uses its keyboard controls', () => {
 test('games fit the screen instead of scrolling', () => {
   const play = readFileSync('src/screens/Play.tsx', 'utf8');
   assert.match(play, /ark-fit/);
-  for (const f of ['SpaceInvaders', 'Breakout', 'PongPlus']) {
+  for (const f of ['SpaceInvaders', 'Breakout', 'PongPlus', 'DoveDefender']) {
     const src = readFileSync(`src/games/${f}.tsx`, 'utf8');
     assert.match(src, /width: 'min\(100cqw, 160cqh\)'/, f);
     assert.doesNotMatch(src, /max-h-\[5[48]0px\]/, f);
@@ -92,7 +92,7 @@ test('left/right and up/down games use the rocker; Tetris keeps the cross', () =
 });
 
 test('A (Space) starts every game from its start screen, and labels say what A does', () => {
-  for (const f of ['SpaceInvaders', 'Breakout', 'PongPlus', 'Tetris']) {
+  for (const f of ['SpaceInvaders', 'Breakout', 'PongPlus', 'Tetris', 'DoveDefender']) {
     const src = readFileSync(`src/games/${f}.tsx`, 'utf8');
     assert.match(src, /if \(e\.code !== 'Space' \|\| e\.repeat\) return;[\s\S]*?startGame\(\);/, f);
   }

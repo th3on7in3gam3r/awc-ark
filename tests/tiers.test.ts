@@ -29,7 +29,7 @@ test('Beginner is gentler and Advanced is tougher in every game', () => {
 });
 
 test('every game takes the tier, and scores record it', () => {
-  for (const f of ['SpaceInvaders', 'Breakout', 'PongPlus', 'Tetris']) {
+  for (const f of ['SpaceInvaders', 'Breakout', 'PongPlus', 'Tetris', 'DoveDefender']) {
     assert.match(readFileSync(`src/games/${f}.tsx`, 'utf8'), /const tune = TIER_TUNING\[tier\];/, f);
   }
   const play = readFileSync('src/screens/Play.tsx', 'utf8');
