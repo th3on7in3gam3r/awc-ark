@@ -17,10 +17,15 @@ export function Home({ me, player, onPickPlayer }: { me: ArkMe; player: ArkPlaye
     }
   });
   const [board, setBoard] = useState<ArkBoard | null>(null);
+  const [boardFailed, setBoardFailed] = useState(false);
 
   useEffect(() => {
     let alive = true;
-    arkApi.board(featured, 'week').then((b) => alive && setBoard(b)).catch(() => undefined);
+    setBoardFailed(false);
+    arkApi
+      .board(featured, 'week')
+      .then((b) => alive && setBoard(b))
+      .catch(() => alive && setBoardFailed(true));
     return () => {
       alive = false;
     };
@@ -108,7 +113,9 @@ export function Home({ me, player, onPickPlayer }: { me: ArkMe; player: ArkPlaye
             See all
           </a>
         </div>
-        {!board ? (
+        {!board && boardFailed ? (
+          <p className="m-0 text-sm text-ark-muted">The board couldn't load right now. Tap See all to try again.</p>
+        ) : !board ? (
           <p className="m-0 text-sm text-ark-muted">Loading…</p>
         ) : board.entries.length === 0 ? (
           <p className="m-0 text-sm text-ark-muted">No scores yet this week. Be the first on the board!</p>
