@@ -168,7 +168,7 @@ function DPad({ layout, size }: { layout: PadLayout; size: number }) {
     >
       <div ref={visualRef} className="pointer-events-none">
         {layout.style === 'thumbstick' ? <Thumbstick size={size} dir={dir} />
-          : twoWay ? <Rocker layout={layout} size={size} dir={dir} /> : <Cross layout={layout} size={size} dir={dir} />}
+          : twoWay ? <Rocker layout={layout} size={size} dir={dir} /> : <Thumbstick size={size} dir={dir} />}
       </div>
     </div>
   );
@@ -255,33 +255,6 @@ function Thumbstick({ size, dir }: { size: number; dir: PadDirection | null }) {
         className="absolute rounded-full border border-white/15 bg-ark-gold shadow-[0_3px_0_#9c691e] transition-transform duration-75"
         style={{ left: '36%', top: '36%', width: '28%', height: '28%', transform: `translate(${dx * size * 0.09}px, ${dy * size * 0.09}px)` }}
       />
-    </div>
-  );
-}
-
-/** Tetris: the classic 4-way cross. */
-function Cross({ layout, size, dir }: { layout: PadLayout; size: number; dir: PadDirection | null }) {
-  const arm = size / 3;
-  const has = (d: PadDirection) => layout.directions.includes(d);
-  const Arm = ({ d, left, top }: { d: PadDirection; left: number; top: number }) => (
-    <div
-      className={`absolute flex items-center justify-center rounded-[14px] transition-colors duration-75 ${
-        has(d) ? (dir === d ? 'bg-ark-gold' : 'bg-[#3A1E24]') : 'bg-[#3A1E24]/35'
-      }`}
-      style={{ width: arm, height: arm, left, top }}
-    >
-      {has(d) ? <Arrow d={d} px={arm * 0.34} on={dir === d} /> : null}
-    </div>
-  );
-  return (
-    <div className="relative" style={{ width: size, height: size }}>
-      <Arm d="up" left={arm} top={0} />
-      <Arm d="left" left={0} top={arm} />
-      <Arm d="right" left={arm * 2} top={arm} />
-      <Arm d="down" left={arm} top={arm * 2} />
-      <div className="absolute bg-[#3A1E24]" style={{ left: arm - 1, top: arm - 1, width: arm + 2, height: arm + 2 }}>
-        <div className="absolute inset-[30%] rounded-full bg-[#2A1418]" />
-      </div>
     </div>
   );
 }
