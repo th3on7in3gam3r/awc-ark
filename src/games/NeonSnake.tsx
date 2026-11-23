@@ -3,7 +3,7 @@ import { Pause, Play } from 'lucide-react';
 import type { Tier } from '../lib/tiers';
 import { storage } from '../services/storage';
 import type { GamepadState } from '../types';
-import { COLUMNS, ROWS, directions, newSnakeRun, stepSnake, type Direction, type SnakeRun } from './neonSnakeLogic';
+import { COLUMNS, ROWS, directions, newSnakeRun, readSnakeController, stepSnake, type Direction, type SnakeRun } from './neonSnakeLogic';
 
 const CELL = 24;
 const KEYS: Partial<Record<string, Direction>> = {
@@ -60,7 +60,7 @@ function draw(context: CanvasRenderingContext2D, run: SnakeRun) {
   }
 }
 
-export function NeonSnake({ tier, player1Gamepad, onRestart }: { tier: Tier; player1Gamepad: GamepadState; onRestart: () => void }) {
+export function NeonSnake({ tier, player1Gamepad, onRestart }: { tier: Tier; player1Gamepad: GamepadState | null; onRestart: () => void }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const pad = useRef(player1Gamepad);
   pad.current = player1Gamepad;
@@ -88,6 +88,7 @@ export function NeonSnake({ tier, player1Gamepad, onRestart }: { tier: Tier; pla
       currentPhase = value;
       lastFrame = null;
       setPhase(value);
+      if (value === 'playing') canvas.current?.focus({ preventScroll: true });
     };
     const startPause = () => {
       if (currentPhase === 'ended') return;
@@ -121,22 +122,10 @@ export function NeonSnake({ tier, player1Gamepad, onRestart }: { tier: Tier; pla
     window.addEventListener('blur', onBlur);
 
     const frame = (time: number) => {
-      const { buttons, axes, connected } = pad.current;
-      const [x, y] = axes;
-      let padDirection: Direction | null = null;
-      if (connected) {
-        if (buttons.up) padDirection = 'up';
-        else if (buttons.down) padDirection = 'down';
-        else if (buttons.left) padDirection = 'left';
-        else if (buttons.right) padDirection = 'right';
-        else if (Math.max(Math.abs(x), Math.abs(y)) > 0.5) {
-          padDirection = Math.abs(x) > Math.abs(y) ? (x < 0 ? 'left' : 'right') : (y < 0 ? 'up' : 'down');
-        }
-      }
-      if (padDirection && padDirection !== previousPad) acceptTurn(padDirection);
-      previousPad = padDirection;
-      const pressed = connected && (buttons.start || buttons.a);
+      const { direction: padDirection, action: pressed } = readSnakeController(pad.current);
       if (pressed && !previousButton) startPause();
+      else if (padDirection && padDirection !== previousPad) acceptTurn(padDirection);
+      previousPad = padDirection;
       previousButton = pressed;
 
       if (currentPhase === 'playing' && lastFrame !== null) {
@@ -187,7 +176,7 @@ export function NeonSnake({ tier, player1Gamepad, onRestart }: { tier: Tier; pla
         {phase === 'playing' && <button type="button" onClick={() => initialAction.current()} className="flex items-center gap-2 rounded-xl border border-ark-line bg-ark-panel px-3 py-2 font-semibold"><Pause size={15} /> Pause</button>}
       </div>
       <div className="relative flex min-h-0 w-full max-w-xl flex-1 items-center justify-center">
-        <canvas ref={canvas} width={COLUMNS * CELL} height={ROWS * CELL} aria-label="Neon Snake game board"
+        <canvas ref={canvas} width={COLUMNS * CELL} height={ROWS * CELL} aria-label="Neon Snake game board" tabIndex={-1}
           className="h-auto max-h-full w-auto max-w-full touch-none rounded-xl border border-[#29504b] object-contain"
           onPointerDown={(event) => {
             if (event.pointerType !== 'touch') return;
@@ -207,7 +196,7 @@ export function NeonSnake({ tier, player1Gamepad, onRestart }: { tier: Tier; pla
           </div>
         )}
       </div>
-      <p className="m-0 text-center text-xs text-ark-muted">Arrow keys, WASD, swipe, or controller</p>
+      <p className="m-0 text-center text-xs text-ark-muted">Steer with arrows, WASD, or swipe. Space or A starts, pauses, or resumes.</p>
     </section>
   );
 }

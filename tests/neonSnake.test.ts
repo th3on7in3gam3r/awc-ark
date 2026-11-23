@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { COLUMNS, ROWS, MAX_SCORE, newSnakeRun, stepSnake } from '../src/games/neonSnakeLogic';
+import { COLUMNS, ROWS, MAX_SCORE, newSnakeRun, readSnakeController, stepSnake } from '../src/games/neonSnakeLogic';
 
 test('one orb adds one point and one segment', () => {
   const run = { ...newSnakeRun(() => 0), food: { x: 11, y: 9 } };
@@ -42,4 +42,17 @@ test('filling the board ends the round at the score ceiling', () => {
   assert.equal(next.food, null);
   assert.equal(next.ended, true);
   assert.equal(next.score, MAX_SCORE);
+});
+
+test('keyboard and touch play do not require a connected gamepad', () => {
+  assert.deepEqual(readSnakeController(null), { direction: null, action: false });
+});
+
+test('a connected controller can steer and toggle play', () => {
+  const buttons = {
+    a: true, b: false, x: false, y: false, lb: false, rb: false,
+    up: false, down: false, left: false, right: false, start: false, select: false,
+  };
+  assert.deepEqual(readSnakeController({ connected: true, id: 'test', index: 0, axes: [0, -0.7, 0, 0], buttons }),
+    { direction: 'up', action: true });
 });
