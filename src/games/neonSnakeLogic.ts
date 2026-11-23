@@ -1,3 +1,5 @@
+import type { GamepadState } from '../types';
+
 export const COLUMNS = 24;
 export const ROWS = 18;
 export const MAX_SCORE = COLUMNS * ROWS - 4;
@@ -7,6 +9,20 @@ export const directions = {
   left: { x: -1, y: 0 }, right: { x: 1, y: 0 },
 };
 export type Direction = keyof typeof directions;
+export function readSnakeController(pad: GamepadState | null): { direction: Direction | null; action: boolean } {
+  if (!pad?.connected) return { direction: null, action: false };
+  const { buttons, axes: [x, y] } = pad;
+  let direction: Direction | null = null;
+  if (buttons.up) direction = 'up';
+  else if (buttons.down) direction = 'down';
+  else if (buttons.left) direction = 'left';
+  else if (buttons.right) direction = 'right';
+  else if (Math.max(Math.abs(x), Math.abs(y)) > 0.5) {
+    direction = Math.abs(x) > Math.abs(y) ? (x < 0 ? 'left' : 'right') : (y < 0 ? 'up' : 'down');
+  }
+  return { direction, action: buttons.start || buttons.a };
+}
+
 type Cell = { x: number; y: number };
 export type SnakeRun = {
   body: Cell[];
