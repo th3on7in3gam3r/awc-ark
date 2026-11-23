@@ -8,6 +8,7 @@ export type GameFinish = {
   gameId: string;
   score: number;
   levelReached?: number;
+  durationSec?: number;
   twoPlayer?: boolean;
   stats?: Record<string, number | undefined>;
   [key: string]: unknown;

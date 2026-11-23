@@ -36,6 +36,19 @@ export function GameArt({ game }: { game: GameKey }) {
       </div>
     );
   }
+  if (game === 'snake') {
+    return (
+      <div className={`${box} bg-[#08151b]`} aria-hidden="true">
+        <div className="absolute inset-0 opacity-50" style={{ backgroundImage: 'linear-gradient(#1d3d40 1px, transparent 1px), linear-gradient(90deg, #1d3d40 1px, transparent 1px)', backgroundSize: '13px 13px' }} />
+        <div className="absolute left-1/2 top-1/2 h-[54px] w-[115px] -translate-x-1/2 -translate-y-1/2">
+          {[[0, 39], [13, 39], [26, 39], [39, 39], [39, 26], [39, 13], [52, 13], [65, 13], [78, 13]].map(([left, top], i) => (
+            <span key={i} className="absolute h-[11px] w-[11px] rounded-[3px]" style={{ left, top, background: i === 8 ? '#c4ff7c' : '#54f5d2' }} />
+          ))}
+          <span className="absolute left-[105px] top-[15px] h-2 w-2 rounded-full bg-[#ff82b3] shadow-[0_0_12px_#ff5b9c]" />
+        </div>
+      </div>
+    );
+  }
   if (game === 'dove') {
     // Bugs in a curved swoop above a little white dove and the ark.
     return (

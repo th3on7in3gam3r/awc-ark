@@ -1,4 +1,4 @@
-export const GAMES = ['pong', 'breakout', 'invaders', 'tetris', 'dove'] as const;
+export const GAMES = ['pong', 'breakout', 'invaders', 'tetris', 'dove', 'snake'] as const;
 export type GameKey = (typeof GAMES)[number];
 
 export const GAME_INFO: Record<GameKey, { title: string; short: string; blurb: string; prototypeId: string }> = {
@@ -6,6 +6,7 @@ export const GAME_INFO: Record<GameKey, { title: string; short: string; blurb: s
   breakout: { title: 'Breakout', short: 'Breakout', blurb: 'Smash every brick', prototypeId: 'breakout' },
   invaders: { title: 'Space Invaders', short: 'Invaders', blurb: 'Hold the line', prototypeId: 'space-invaders' },
   tetris: { title: 'Tetris', short: 'Tetris', blurb: 'Clear the lines', prototypeId: 'tetris' },
+  snake: { title: 'Neon Snake', short: 'Snake', blurb: 'Collect orbs and outmaneuver your tail', prototypeId: 'neon-snake' },
   dove: { title: 'Dove Defender', short: 'Dove', blurb: 'Guard the ark from the swarm', prototypeId: 'dove-defender' },
 };
 

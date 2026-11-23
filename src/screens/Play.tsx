@@ -5,6 +5,7 @@ const PongPlus = lazy(() => import('../games/PongPlus').then((m) => ({ default: 
 const Breakout = lazy(() => import('../games/Breakout').then((m) => ({ default: m.Breakout })));
 const SpaceInvaders = lazy(() => import('../games/SpaceInvaders').then((m) => ({ default: m.SpaceInvaders })));
 const Tetris = lazy(() => import('../games/Tetris').then((m) => ({ default: m.Tetris })));
+const NeonSnake = lazy(() => import('../games/NeonSnake').then((m) => ({ default: m.NeonSnake })));
 const DoveDefender = lazy(() => import('../games/DoveDefender').then((m) => ({ default: m.DoveDefender })));
 import { useGamepad } from '../services/gamepad';
 import { onGameFinish, type GameFinish } from '../services/storage';
@@ -101,10 +102,10 @@ export function Play({
       const key = gameFromPrototypeId(String(f.gameId));
       if (key !== game || f.twoPlayer) return; // 2 players on one screen aren't ranked
       const nowMs = Date.now();
-      if (nowMs - lastFinish.current < 1500) return; // one game, one score
+      if (game !== 'snake' && nowMs - lastFinish.current < 1500) return; // legacy games can emit duplicate finishes
       lastFinish.current = nowMs;
       const score = Math.max(0, Math.floor(Number(f.score) || 0));
-      const durationSec = Math.round((nowMs - startedAt.current) / 1000);
+      const durationSec = f.durationSec ?? Math.round((nowMs - startedAt.current) / 1000);
       startedAt.current = nowMs;
       // Tier first: the board keeps up to 8 stats. 1 Beginner, 2 Intermediate, 3 Advanced.
       const stats: Record<string, number> = { tier: TIER_INFO[tierRef.current].code };
@@ -249,6 +250,7 @@ export function Play({
           {game === 'breakout' && <Breakout key={`${run}-${tier}`} tier={tier} player1Gamepad={player1} />}
           {game === 'invaders' && <SpaceInvaders key={`${run}-${tier}`} tier={tier} player1Gamepad={player1} />}
           {game === 'tetris' && <Tetris key={`${run}-${tier}`} tier={tier} player1Gamepad={player1} />}
+          {game === 'snake' && <NeonSnake key={`${run}-${tier}`} tier={tier} player1Gamepad={player1} onRestart={playAgain} />}
           {game === 'dove' && <DoveDefender key={`${run}-${tier}`} tier={tier} player1Gamepad={player1} />}
           </Suspense>
         </div>
