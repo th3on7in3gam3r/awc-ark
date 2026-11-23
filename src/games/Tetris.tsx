@@ -4,7 +4,7 @@ import confetti from 'canvas-confetti';
 import { GamepadState, HighScoreEntry, ScoreSubmissionData } from '../types';
 import { sound } from '../services/sound';
 import { storage } from '../services/storage';
-import { Play, Pause, RotateCcw, Volume2, VolumeX, Trophy, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, ChevronsDown } from 'lucide-react';
+import { Play, Pause, RotateCcw, Volume2, VolumeX, Trophy } from 'lucide-react';
 
 interface TetrisProps {
   /** Beginner / Intermediate / Advanced. */
@@ -538,21 +538,7 @@ export const Tetris: React.FC<TetrisProps> = ({
         </div>
 
       </div>
-      {/* Accessible touch controls; keyboard and physical gamepad remain supported. */}
-      <div className="sm:hidden shrink-0 flex items-center justify-center gap-4 rounded-xl border border-purple-500/30 bg-slate-900 p-2" aria-label="Tetris touch controls">
-        <div className="grid grid-cols-3 gap-1" role="group" aria-label="Directional controls">
-          <span />
-          <button type="button" aria-label="Rotate piece" disabled={!isPlaying || isPaused} onClick={rotatePiece} className="min-h-12 min-w-12 touch-manipulation rounded-xl bg-purple-700 text-white disabled:opacity-40 flex items-center justify-center"><ArrowUp /></button>
-          <span />
-          <button type="button" aria-label="Move left" disabled={!isPlaying || isPaused} onClick={() => moveHoriz(-1)} className="min-h-12 min-w-12 touch-manipulation rounded-xl bg-slate-700 text-white disabled:opacity-40 flex items-center justify-center"><ArrowLeft /></button>
-          <button type="button" aria-label="Soft drop" disabled={!isPlaying || isPaused} onClick={dropOne} className="min-h-12 min-w-12 touch-manipulation rounded-xl bg-slate-700 text-white disabled:opacity-40 flex items-center justify-center"><ArrowDown /></button>
-          <button type="button" aria-label="Move right" disabled={!isPlaying || isPaused} onClick={() => moveHoriz(1)} className="min-h-12 min-w-12 touch-manipulation rounded-xl bg-slate-700 text-white disabled:opacity-40 flex items-center justify-center"><ArrowRight /></button>
-        </div>
-        <div className="flex flex-col gap-2">
-          <button type="button" disabled={!isPlaying || isPaused} onClick={hardDrop} className="min-h-12 rounded-xl bg-cyan-600 px-4 font-bold text-white disabled:opacity-40 flex items-center gap-1"><ChevronsDown size={20} /> DROP</button>
-          <button type="button" disabled={!isPlaying || isPaused || !canHold} onClick={holdCurrentPiece} className="min-h-12 rounded-xl bg-slate-700 px-4 font-bold text-white disabled:opacity-40">HOLD</button>
-        </div>
-      </div>
+
     </div>
   );
 };
