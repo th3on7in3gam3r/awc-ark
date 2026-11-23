@@ -70,6 +70,7 @@ export const PAD_LAYOUTS: Record<GameKey, PadLayout> = {
     buttons: [{ id: 'a', label: 'A', hint: 'Start / Pause', press: KEY.space }],
   },
   tetris: {
+    style: 'thumbstick',
     directions: ['up', 'down', 'left', 'right'],
     keys: { up: KEY.up, down: KEY.down, left: KEY.left, right: KEY.right },
     repeatDirections: { left: 110, right: 110, down: 55 },
