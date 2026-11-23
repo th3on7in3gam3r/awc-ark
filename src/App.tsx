@@ -1,13 +1,14 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
-import { arkApi, ArkError, type ArkMe, type ArkPlayer } from './lib/api';
+import { arkApi, ArkError, type ArkMe } from './lib/api';
 import { useRoute } from './lib/route';
 import { Home } from './screens/Home';
 import { Play } from './screens/Play';
 import { Leaderboard } from './screens/Leaderboard';
 import { SignedOut } from './screens/SignedOut';
 import { PlayerPicker } from './screens/PlayerPicker';
+import { ArkUpdateRequired, useArkUpdate } from './screens/ArkUpdate';
 
 const PLAYER_KEY = 'awc.ark.player';
 
@@ -21,6 +22,7 @@ function readSavedPlayer(): string | null {
 
 export default function App() {
   const route = useRoute();
+  const update = useArkUpdate();
   const [me, setMe] = useState<ArkMe | null>(null);
   const [error, setError] = useState<ArkError | null>(null);
   const [loading, setLoading] = useState(true);
@@ -62,6 +64,11 @@ export default function App() {
     }
   };
 
+  const player = me?.players.find((p) => p.id === playerId) || me?.players[0] || null;
+  if (update && (route.name !== 'play' || !player || loading || error)) {
+    return <ArkUpdateRequired version={update} />;
+  }
+
   if (loading) {
     return (
       <main className="min-h-dvh flex items-center justify-center" aria-busy="true">
@@ -74,8 +81,6 @@ export default function App() {
     return <SignedOut error={error} onRetry={() => { setLoading(true); void load(); }} />;
   }
 
-  const player: ArkPlayer | null = me.players.find((p) => p.id === playerId) || me.players[0] || null;
-
   /** After a game: refresh bests and Bucks quietly. */
   const refresh = () => void load();
 
@@ -85,7 +90,7 @@ export default function App() {
         <Home me={me} player={player} onPickPlayer={() => setPickerOpen(true)} />
       )}
       {route.name === 'play' && player && (
-        <Play key={route.game} game={route.game} player={player} settings={me.settings} onPickPlayer={() => setPickerOpen(true)} onScoreSaved={refresh} />
+        <Play key={route.game} game={route.game} player={player} settings={me.settings} update={update} onPickPlayer={() => setPickerOpen(true)} onScoreSaved={refresh} />
       )}
       {route.name === 'board' && <Leaderboard game={route.game} />}
       {pickerOpen && (

@@ -7,6 +7,7 @@ const SpaceInvaders = lazy(() => import('../games/SpaceInvaders').then((m) => ({
 const Tetris = lazy(() => import('../games/Tetris').then((m) => ({ default: m.Tetris })));
 const NeonSnake = lazy(() => import('../games/NeonSnake').then((m) => ({ default: m.NeonSnake })));
 const DoveDefender = lazy(() => import('../games/DoveDefender').then((m) => ({ default: m.DoveDefender })));
+import { ArkUpdateRequired } from './ArkUpdate';
 import { useGamepad } from '../services/gamepad';
 import { onGameFinish, type GameFinish } from '../services/storage';
 import { arkApi, ArkError, type ArkPlayer, type ScoreResult } from '../lib/api';
@@ -55,12 +56,14 @@ export function Play({
   game,
   player,
   settings,
+  update,
   onPickPlayer,
   onScoreSaved,
 }: {
   game: GameKey;
   player: ArkPlayer;
   settings: { bucksEnabled: boolean; weeklyCap: number };
+  update: string | null;
   onPickPlayer: () => void;
   onScoreSaved: () => void;
 }) {
@@ -76,7 +79,7 @@ export function Play({
   }, [player.id]);
   const chooseTier = (next: Tier) => {
     setSettingsOpen(false);
-    if (next === tier) return;
+    if (update || next === tier) return;
     saveTier(player.id, next);
     setTier(next);
     setFinish(null);
@@ -132,6 +135,7 @@ export function Play({
   }, [game, run, onScoreSaved]);
 
   const playAgain = () => {
+    if (update) return;
     setFinish(null);
     setRun((n) => n + 1);
   };
@@ -179,6 +183,7 @@ export function Play({
     <button
       type="button"
       onClick={() => setSettingsOpen(true)}
+      disabled={Boolean(update)}
       aria-label={`Level: ${TIER_INFO[tier].label}. Change level`}
       title="Game settings"
       className="shrink-0 flex items-center gap-1.5 h-11 rounded-full border bg-ark-panel text-ark-gold border-ark-line px-3"
@@ -215,6 +220,8 @@ export function Play({
     </button>
   );
 
+  if (update && finish?.state === 'done') return <ArkUpdateRequired version={update} />;
+
   return (
     <main
       className={`ark-fit mx-auto w-full overflow-hidden flex flex-col ${sideways ? 'ark-compact' : ''} ${padBeside ? 'gap-1.5 pt-[max(0.375rem,env(safe-area-inset-top))] pl-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))] max-w-none' : 'gap-2 sm:gap-3 pt-3 sm:pt-4 px-3 sm:px-5 max-w-[900px]'} pb-[max(0.5rem,env(safe-area-inset-bottom))]`}
@@ -228,6 +235,12 @@ export function Play({
           {padToggle}
           {playerButton}
         </header>
+      )}
+
+      {update && (
+        <p role="status" className="m-0 shrink-0 rounded-xl border border-ark-line bg-ark-panel px-3 py-2 text-xs font-semibold text-ark-muted">
+          An Ark update is ready. Finish your round or go back to refresh.
+        </p>
       )}
 
       {/* Game fills whatever height is left; the pad sits under it, or beside it when sideways. */}
@@ -274,7 +287,7 @@ export function Play({
         <p className="shrink-0 m-0 text-xs text-ark-muted">2-player games on one screen are just for fun and don’t go on the board.</p>
       ) : null}
 
-      {settingsOpen ? <TierSheet tier={tier} onPick={chooseTier} onClose={() => setSettingsOpen(false)} /> : null}
+      {settingsOpen && !update ? <TierSheet tier={tier} onPick={chooseTier} onClose={() => setSettingsOpen(false)} /> : null}
 
       {finish ? (
         <FinishSheet
@@ -282,7 +295,7 @@ export function Play({
           game={game}
           player={player}
           bucksEnabled={settings.bucksEnabled}
-          onPlayAgain={playAgain}
+          onPlayAgain={update ? undefined : playAgain}
           onClose={() => setFinish(null)}
         />
       ) : null}
@@ -302,7 +315,7 @@ function FinishSheet({
   game: GameKey;
   player: ArkPlayer;
   bucksEnabled: boolean;
-  onPlayAgain: () => void;
+  onPlayAgain?: () => void;
   onClose: () => void;
 }) {
   const result = finish.state === 'done' ? finish.result : null;
@@ -377,9 +390,11 @@ function FinishSheet({
         ) : null}
 
         <div className="flex flex-col gap-2.5">
-          <button type="button" onClick={onPlayAgain} className="h-14 rounded-2xl bg-ark-gold text-ark-wine font-extrabold text-[17px]">
-            Play again
-          </button>
+          {onPlayAgain && (
+            <button type="button" onClick={onPlayAgain} className="h-14 rounded-2xl bg-ark-gold text-ark-wine font-extrabold text-[17px]">
+              Play again
+            </button>
+          )}
           <button
             type="button"
             onClick={() => go(`/board/${game}`)}
