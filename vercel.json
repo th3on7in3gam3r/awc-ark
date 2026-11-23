@@ -11,6 +11,10 @@
       "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
     },
     {
+      "source": "/ark/build-version.json",
+      "headers": [{ "key": "Cache-Control", "value": "no-store" }]
+    },
+    {
       "source": "/ark/(index.html)?",
       "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
     }
