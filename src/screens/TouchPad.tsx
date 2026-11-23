@@ -134,7 +134,7 @@ function DPad({ layout, size }: { layout: PadLayout; size: number }) {
     };
   }, [end]);
 
-  const label = !twoWay ? 'Direction pad' : layout.directions.includes('left') ? 'Move left or right' : 'Move up or down';
+  const label = layout.style === 'thumbstick' ? 'Four-direction joystick' : !twoWay ? 'Direction pad' : layout.directions.includes('left') ? 'Move left or right' : 'Move up or down';
 
   return (
     <div
@@ -167,7 +167,8 @@ function DPad({ layout, size }: { layout: PadLayout; size: number }) {
       onContextMenu={(e) => e.preventDefault()}
     >
       <div ref={visualRef} className="pointer-events-none">
-        {twoWay ? <Rocker layout={layout} size={size} dir={dir} /> : <Cross layout={layout} size={size} dir={dir} />}
+        {layout.style === 'thumbstick' ? <Thumbstick size={size} dir={dir} />
+          : twoWay ? <Rocker layout={layout} size={size} dir={dir} /> : <Cross layout={layout} size={size} dir={dir} />}
       </div>
     </div>
   );
@@ -224,6 +225,36 @@ function Rocker({ layout, size, dir }: { layout: PadLayout; size: number; dir: P
       {half(first)}
       <div className={vertical ? 'h-[2px] bg-[#2A1418]' : 'w-[2px] bg-[#2A1418]'} />
       {half(second)}
+    </div>
+  );
+}
+
+/** A four-direction version of the arcade rocker for Snake. */
+function Thumbstick({ size, dir }: { size: number; dir: PadDirection | null }) {
+  const offset = { up: [0, -1], right: [1, 0], down: [0, 1], left: [-1, 0] } as const;
+  const [dx, dy] = dir ? offset[dir] : [0, 0];
+  const reach = size * 0.32;
+  return (
+    <div
+      className="relative rounded-full border border-ark-line bg-[#3A1E24] shadow-[0_6px_0_rgba(42,20,24,0.28),0_12px_20px_-12px_rgba(42,20,24,0.6)]"
+      style={{ width: size, height: size }}
+    >
+      {(Object.keys(offset) as PadDirection[]).map((direction) => {
+        const [x, y] = offset[direction];
+        return (
+          <span
+            key={direction}
+            className={`absolute flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full transition-colors duration-75 ${dir === direction ? 'bg-[#713c46]' : ''}`}
+            style={{ left: size / 2 + x * reach, top: size / 2 + y * reach, width: size * 0.28, height: size * 0.28 }}
+          >
+            <Arrow d={direction} px={size * 0.17} on={dir === direction} />
+          </span>
+        );
+      })}
+      <span
+        className="absolute rounded-full border border-white/15 bg-ark-gold shadow-[0_3px_0_#9c691e] transition-transform duration-75"
+        style={{ left: '36%', top: '36%', width: '28%', height: '28%', transform: `translate(${dx * size * 0.09}px, ${dy * size * 0.09}px)` }}
+      />
     </div>
   );
 }
