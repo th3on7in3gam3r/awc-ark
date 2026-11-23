@@ -17,7 +17,8 @@ test('every game maps from the prototype id it reports', () => {
   assert.equal(gameFromPrototypeId('tetris'), 'tetris');
   assert.equal(gameFromPrototypeId('breakout'), 'breakout');
   assert.equal(gameFromPrototypeId('dove-defender'), 'dove');
-  assert.equal(GAMES.length, 5);
+  assert.equal(gameFromPrototypeId('neon-snake'), 'snake');
+  assert.equal(GAMES.length, 6);
   assert.equal(formatScore(16920), '16,920');
 });
 

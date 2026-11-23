@@ -62,6 +62,11 @@ export const PAD_LAYOUTS: Record<GameKey, PadLayout> = {
     keys: { left: KEY.left, right: KEY.right },
     buttons: [{ id: 'a', label: 'A', hint: 'Fire', press: KEY.space, repeatMs: 220 }],
   },
+  snake: {
+    directions: ['up', 'down', 'left', 'right'],
+    keys: { up: KEY.up, down: KEY.down, left: KEY.left, right: KEY.right },
+    buttons: [{ id: 'a', label: 'A', hint: 'Start / Pause', press: KEY.space }],
+  },
   tetris: {
     directions: ['up', 'down', 'left', 'right'],
     keys: { up: KEY.up, down: KEY.down, left: KEY.left, right: KEY.right },
