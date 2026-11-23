@@ -22,6 +22,7 @@ export type PadButton = {
 };
 
 export type PadLayout = {
+  style?: 'thumbstick';
   /** Directions the D-pad uses for this game. */
   directions: PadDirection[];
   keys: Partial<Record<PadDirection, PadKey>>;
@@ -63,6 +64,7 @@ export const PAD_LAYOUTS: Record<GameKey, PadLayout> = {
     buttons: [{ id: 'a', label: 'A', hint: 'Fire', press: KEY.space, repeatMs: 220 }],
   },
   snake: {
+    style: 'thumbstick',
     directions: ['up', 'down', 'left', 'right'],
     keys: { up: KEY.up, down: KEY.down, left: KEY.left, right: KEY.right },
     buttons: [{ id: 'a', label: 'A', hint: 'Start / Pause', press: KEY.space }],

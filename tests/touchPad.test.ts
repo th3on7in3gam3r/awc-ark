@@ -99,3 +99,13 @@ test('A (Space) starts every game from its start screen, and labels say what A d
   assert.equal(PAD_LAYOUTS.breakout.buttons[0].hint, 'Start / Laser');
   assert.equal(PAD_LAYOUTS.pong.buttons[0].hint, 'Start / Laser');
 });
+
+
+test('Snake uses a four-direction thumbstick with the standard A button', () => {
+  const snake = PAD_LAYOUTS.snake;
+  assert.equal(snake.style, 'thumbstick');
+  assert.equal(isTwoWay(snake), false);
+  assert.deepEqual(snake.directions, ['up', 'down', 'left', 'right']);
+  assert.equal(snake.buttons[0].press.code, 'Space');
+  assert.equal(PAD_LAYOUTS.tetris.style, undefined);
+});
